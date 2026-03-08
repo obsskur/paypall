@@ -216,20 +216,41 @@
         applyTheme(state.theme);
         if (typeof lucide !== 'undefined') lucide.createIcons();
         initMarkets();
-        if (typeof TradingView !== 'undefined') initTradingView();
+        // Added check for TradingView presence
+        if (typeof TradingView !== 'undefined') {
+            initTradingView();
+        }
         if (typeof Chart !== 'undefined') initCharts();
         startWS();
         setInterval(engine, 200);
         setInterval(updateTime, 1000);
         renderWallet();
         addLog("System initialized. Secure connection established.");
-        addLog("Recovered 2 active positions from previous session.");
+        addLog("Recovered active positions from session.");
     };
+
+    // FIXED: Added the missing initTradingView function
+    function initTradingView() {
+        if (document.getElementById('tv_frame')) {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:" + state.active,
+                "interval": "15",
+                "timezone": "Etc/UTC",
+                "theme": state.theme,
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tv_frame"
+            });
+        }
+    }
 
     function startWS() {
         const stream = assets.map(a => a.toLowerCase() + '@ticker').join('/');
-        const depthStream = assets.map(a => a.toLowerCase() + '@depth20@100ms').join('/');
-        
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}`);
         ws.onmessage = (e) => {
             const d = JSON.parse(e.data);
@@ -338,7 +359,7 @@
                 </div>`;
         });
 
-        hist.innerHTML = state.history.map(t => `
+        if(hist) hist.innerHTML = state.history.map(t => `
             <tr>
                 <td>${t.date}</td>
                 <td>${t.coin}</td>
@@ -372,8 +393,9 @@
     }
 
     function initCharts() {
-        const aCtx = document.getElementById('alloc-chart').getContext('2d');
-        new Chart(aCtx, {
+        const aCtx = document.getElementById('alloc-chart');
+        if(!aCtx) return;
+        new Chart(aCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['BTC', 'ETH', 'SOL', 'USDT'],
@@ -406,6 +428,7 @@
 
     function initMarkets() {
         const list = document.getElementById('market-list');
+        if(!list) return;
         assets.forEach(a => {
             const div = document.createElement('div');
             div.className = `m-row ${state.active === a ? 'active' : ''}`;
@@ -414,9 +437,9 @@
                 state.active = a;
                 document.querySelectorAll('.m-row').forEach(r => r.classList.remove('active'));
                 div.classList.add('active');
-                initTradingView();
                 save();
-                location.reload(); // Re-init WS for the new pair
+                initTradingView(); // Live update chart
+                // location.reload(); // Uncomment if you want to hard reset the stream
             };
             div.innerHTML = `<span>${a.replace('USDT','')}</span><div style="text-align:right"><div class="p-val">---</div><div class="p-chg" style="font-size:10px;">0%</div></div>`;
             list.appendChild(div);
@@ -432,9 +455,14 @@
             chg.style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
         }
         if(d.s === state.active) {
-            document.getElementById('mid-price').innerText = parseFloat(d.c).toLocaleString();
-            document.getElementById('h-vol').innerText = (parseFloat(d.q)/1000000).toFixed(2) + 'M';
-            document.getElementById('h-pair').innerText = d.s.replace('USDT','') + ' / USDT';
+            const midPrice = document.getElementById('mid-price');
+            if(midPrice) midPrice.innerText = parseFloat(d.c).toLocaleString();
+            
+            const hVol = document.getElementById('h-vol');
+            if(hVol) hVol.innerText = (parseFloat(d.q)/1000000).toFixed(2) + 'M';
+            
+            const hPair = document.getElementById('h-pair');
+            if(hPair) hPair.innerText = d.s.replace('USDT','') + ' / USDT';
         }
     }
 
