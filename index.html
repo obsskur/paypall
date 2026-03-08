@@ -339,6 +339,173 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 
 /* ───────── MINI SPARKLINE ───────── */
 .sparkline { width:64px; height:24px; }
+
+/* ───────── PROFILE VIEW ───────── */
+#view-profile {
+  display:none; grid-column:2/5; grid-row:1/4;
+  overflow-y:auto; overflow-x:hidden;
+  background:var(--bg0); z-index:10;
+}
+#view-profile.show { display:block; }
+
+.profile-topbar {
+  height:48px; background:var(--bg1); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 20px; gap:14px;
+  position:sticky; top:0; z-index:5;
+}
+.profile-back {
+  width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
+  background:transparent; color:var(--text1); cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; transition:all .12s;
+}
+.profile-back:hover { border-color:var(--border2); color:var(--text0); }
+.profile-topbar-title { font-size:13px; font-weight:600; color:var(--text0); }
+
+.profile-inner { max-width:640px; margin:0 auto; padding:24px 20px 60px; }
+
+/* Identity header — clean, no card, just name + uid */
+.profile-identity {
+  display:flex; align-items:center; gap:16px;
+  padding:20px 0 20px; margin-bottom:8px;
+}
+.profile-avatar-large {
+  width:56px; height:56px; border-radius:50%; flex-shrink:0;
+  background:#3a3f6e;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:700; color:#c8ccf0; letter-spacing:0;
+}
+.profile-identity-info { flex:1; min-width:0; }
+.profile-username { font-size:16px; font-weight:600; color:var(--text0); margin-bottom:2px; }
+.profile-uid { font-family:var(--mono); font-size:11px; color:var(--text2); margin-bottom:6px; letter-spacing:.02em; }
+.profile-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.pmeta-item { font-size:11px; color:var(--text2); }
+.pmeta-verified {
+  display:inline-flex; align-items:center; gap:4px;
+  color:var(--pos); font-size:11px;
+}
+.pmeta-sep { color:var(--text2); font-size:11px; }
+
+/* Sections */
+.profile-section {
+  background:var(--bg1); border:1px solid var(--border);
+  border-radius:8px; margin-bottom:10px; overflow:hidden;
+}
+.profile-section-header {
+  padding:12px 16px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.profile-section-title {
+  font-size:11px; font-weight:600; color:var(--text1);
+  text-transform:uppercase; letter-spacing:.5px;
+}
+
+/* Fields */
+.profile-field {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.04);
+  gap:12px;
+}
+.profile-field:hover { background:rgba(255,255,255,0.015); }
+.pf-left { flex:1; min-width:0; }
+.pf-label { font-size:11px; color:var(--text2); margin-bottom:3px; }
+.pf-value {
+  font-size:13px; color:var(--text0); font-weight:400;
+  display:flex; align-items:center; gap:8px;
+}
+.pf-mono { font-family:var(--mono); font-size:12px; }
+.pf-tag {
+  font-size:10px; font-weight:500; padding:1px 7px; border-radius:3px;
+}
+.pf-tag-ok { color:var(--pos); background:rgba(0,200,150,.08); }
+.pf-tag-warn { color:#f0b429; background:rgba(240,180,41,.08); }
+
+/* Withdrawal address layout */
+.pf-addr-coin { display:flex; align-items:center; gap:10px; flex:1; }
+.pf-coin-dot {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700;
+}
+
+/* Action button — subtle, right-aligned */
+.pf-action-btn {
+  background:none; border:1px solid var(--border); color:var(--text1);
+  padding:4px 12px; border-radius:5px; font-size:11px; font-weight:500;
+  cursor:pointer; font-family:var(--sans); white-space:nowrap;
+  transition:border-color .12s, color .12s; flex-shrink:0;
+}
+.pf-action-btn:hover { border-color:var(--border2); color:var(--text0); }
+
+/* Security rows */
+.security-row {
+  display:flex; align-items:center; padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.04); gap:12px;
+}
+.sec-icon-wrap {
+  width:30px; height:30px; border-radius:6px; background:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; color:var(--text1);
+}
+.sec-info { flex:1; }
+.sec-name { font-size:12px; font-weight:500; color:var(--text0); }
+.sec-desc { font-size:10px; color:var(--text2); margin-top:2px; }
+.sec-status { font-size:10px; color:var(--text2); flex-shrink:0; }
+.sec-status-on { color:var(--pos); }
+.toggle-switch {
+  width:34px; height:18px; border-radius:9px; background:var(--bg4);
+  border:none; cursor:pointer; position:relative; flex-shrink:0;
+  transition:background .18s; outline:none;
+}
+.toggle-switch.on { background:var(--pos); }
+.toggle-switch::after {
+  content:''; position:absolute; width:12px; height:12px; border-radius:50%;
+  background:#fff; top:3px; left:3px; transition:left .18s;
+}
+.toggle-switch.on::after { left:19px; }
+
+/* Modal */
+#profile-modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+  z-index:100; align-items:center; justify-content:center;
+}
+#profile-modal-overlay.open { display:flex; }
+.profile-modal {
+  background:var(--bg2); border:1px solid var(--border2); border-radius:10px;
+  padding:24px; width:380px; max-width:92vw; animation:modalIn .15s ease;
+}
+@keyframes modalIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.modal-title { font-size:14px; font-weight:600; margin-bottom:3px; }
+.modal-sub { font-size:11px; color:var(--text2); margin-bottom:18px; line-height:1.5; }
+.modal-field { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.modal-label { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; }
+.modal-input {
+  background:var(--bg3); border:1px solid var(--border); border-radius:6px;
+  padding:9px 11px; color:var(--text0); font-size:13px; outline:none;
+  transition:border-color .12s; width:100%; font-family:inherit;
+  box-sizing:border-box;
+}
+.modal-input:focus { border-color:var(--accent); }
+.modal-actions { display:flex; gap:8px; margin-top:4px; }
+.modal-btn-cancel {
+  flex:1; padding:8px; border-radius:6px; border:1px solid var(--border);
+  background:transparent; color:var(--text1); font-size:12px; font-weight:500;
+  cursor:pointer; transition:all .12s; font-family:var(--sans);
+}
+.modal-btn-cancel:hover { border-color:var(--border2); color:var(--text0); }
+.modal-btn-save {
+  flex:1; padding:8px; border-radius:6px; border:none;
+  background:var(--accent); color:#000; font-size:12px;
+  font-weight:600; cursor:pointer; font-family:var(--sans); transition:opacity .12s;
+}
+.modal-btn-save:hover { opacity:.88; }
+
+/* Danger */
+.danger-btn {
+  background:transparent; border:1px solid rgba(255,77,109,.25); color:var(--neg);
+  padding:5px 14px; border-radius:5px; font-size:11px; font-weight:500;
+  cursor:pointer; font-family:var(--sans); transition:all .12s;
+}
+.danger-btn:hover { background:rgba(255,77,109,.08); border-color:rgba(255,77,109,.5); }
 </style>
 </head>
 <body>
@@ -363,7 +530,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     <button class="nav-btn" onclick="toggleTheme()" title="Theme">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <div class="nav-avatar" title="Account">D</div>
+    <div class="nav-avatar" id="btn-profile" title="Account" onclick="switchView('profile')">D</div>
   </nav>
 
   <!-- TOPBAR -->
@@ -586,6 +753,230 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     </div>
   </div><!-- /.wallet-inner -->
   </section>
+
+
+  <!-- PROFILE VIEW -->
+  <section id="view-profile">
+    <div class="profile-topbar">
+      <button class="profile-back" onclick="switchView('trade')" title="Back">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="profile-topbar-title">Account</span>
+    </div>
+
+    <div class="profile-inner">
+
+      <!-- IDENTITY HEADER -->
+      <div class="profile-identity">
+        <div class="profile-avatar-large" id="profile-avatar-el">D</div>
+        <div class="profile-identity-info">
+          <div class="profile-username" id="profile-display-name">D.Harrison</div>
+          <div class="profile-uid">UID&nbsp;&nbsp;481927364</div>
+          <div class="profile-meta">
+            <span class="pmeta-item pmeta-verified">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              Identity Verified
+            </span>
+            <span class="pmeta-sep">·</span>
+            <span class="pmeta-item">Member since Mar 2024</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERSONAL INFO -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <span class="profile-section-title">Personal Information</span>
+        </div>
+        <div class="profile-field">
+          <div class="pf-left">
+            <div class="pf-label">Nickname</div>
+            <div class="pf-value" id="pf-username-val">D.Harrison</div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('username')">Edit</button>
+        </div>
+        <div class="profile-field">
+          <div class="pf-left">
+            <div class="pf-label">Email Address</div>
+            <div class="pf-value">
+              d.h••••••@gmail.com
+              <span class="pf-tag pf-tag-ok">Verified</span>
+            </div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('email')">Change</button>
+        </div>
+        <div class="profile-field">
+          <div class="pf-left">
+            <div class="pf-label">Phone Number</div>
+            <div class="pf-value">
+              +44 79•• ••• •••
+              <span class="pf-tag pf-tag-ok">Verified</span>
+            </div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('phone')">Change</button>
+        </div>
+        <div class="profile-field">
+          <div class="pf-left">
+            <div class="pf-label">Country / Region</div>
+            <div class="pf-value">United Kingdom</div>
+          </div>
+        </div>
+        <div class="profile-field" style="border:none">
+          <div class="pf-left">
+            <div class="pf-label">Date of Birth</div>
+            <div class="pf-value">•• / •• / ••••</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECURITY -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <span class="profile-section-title">Security</span>
+          <button class="pf-action-btn" onclick="openModal('password')">Change Password</button>
+        </div>
+
+        <div class="security-row">
+          <div class="sec-icon-wrap">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          </div>
+          <div class="sec-info">
+            <div class="sec-name">Two-Factor Authentication</div>
+            <div class="sec-desc">Authenticator app · last used 2h ago</div>
+          </div>
+          <span class="sec-status sec-status-on">Enabled</span>
+          <button class="toggle-switch on" onclick="toggleSecurity(this,'Two-Factor Authentication')"></button>
+        </div>
+
+        <div class="security-row">
+          <div class="sec-icon-wrap">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="sec-info">
+            <div class="sec-name">Login Notifications</div>
+            <div class="sec-desc">Email alert on new device sign-in</div>
+          </div>
+          <span class="sec-status sec-status-on">Enabled</span>
+          <button class="toggle-switch on" onclick="toggleSecurity(this,'Login Notifications')"></button>
+        </div>
+
+        <div class="security-row">
+          <div class="sec-icon-wrap">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="sec-info">
+            <div class="sec-name">Anti-Phishing Code</div>
+            <div class="sec-desc">Unique code included in all Orion emails</div>
+          </div>
+          <span class="sec-status" id="sec-phishing-label">Disabled</span>
+          <button class="toggle-switch" id="toggle-phishing" onclick="toggleSecurity(this,'Anti-Phishing Code')"></button>
+        </div>
+
+        <div class="security-row" style="border:none">
+          <div class="sec-icon-wrap">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <div class="sec-info">
+            <div class="sec-name">Withdrawal Address Whitelist</div>
+            <div class="sec-desc">Restrict withdrawals to saved addresses only</div>
+          </div>
+          <span class="sec-status sec-status-on">Enabled</span>
+          <button class="toggle-switch on" onclick="toggleSecurity(this,'Withdrawal Whitelist')"></button>
+        </div>
+      </div>
+
+      <!-- WITHDRAWAL ADDRESSES -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <span class="profile-section-title">Withdrawal Addresses</span>
+          <button class="pf-action-btn" onclick="openModal('address')">Add Address</button>
+        </div>
+        <div class="profile-field">
+          <div class="pf-addr-coin">
+            <div class="pf-coin-dot" style="background:#f7931a22; color:#f7931a;">₿</div>
+            <div>
+              <div class="pf-label">BTC · Bitcoin</div>
+              <div class="pf-value pf-mono">bc1q••••3e4</div>
+            </div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('btc-address')">Edit</button>
+        </div>
+        <div class="profile-field" style="border:none">
+          <div class="pf-addr-coin">
+            <div class="pf-coin-dot" style="background:#627eea22; color:#627eea;">Ξ</div>
+            <div>
+              <div class="pf-label">ETH · Ethereum (ERC-20)</div>
+              <div class="pf-value pf-mono">0x71C7••••8976F</div>
+            </div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('eth-address')">Edit</button>
+        </div>
+      </div>
+
+      <!-- API MANAGEMENT -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <span class="profile-section-title">API Management</span>
+          <button class="pf-action-btn" onclick="openModal('api-key')">Create Key</button>
+        </div>
+        <div class="profile-field" style="border:none">
+          <div class="pf-left">
+            <div class="pf-label">orion-read-only-01 &nbsp;<span style="font-size:10px; color:var(--pos); background:rgba(0,200,150,.08); padding:1px 6px; border-radius:3px;">Active</span></div>
+            <div class="pf-value pf-mono">orion_••••••••••••_r0</div>
+            <div style="font-size:10px; color:var(--text2); margin-top:2px;">Read · Created 14 Feb 2026 · Last used today</div>
+          </div>
+          <button class="pf-action-btn" onclick="showToast('info','Regenerate Key','2FA confirmation required')">Manage</button>
+        </div>
+      </div>
+
+      <!-- PREFERENCES -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <span class="profile-section-title">Preferences</span>
+        </div>
+        <div class="profile-field">
+          <div class="pf-left">
+            <div class="pf-label">Language</div>
+            <div class="pf-value">English (UK)</div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('language')">Change</button>
+        </div>
+        <div class="profile-field" style="border:none">
+          <div class="pf-left">
+            <div class="pf-label">Display Currency</div>
+            <div class="pf-value">USD — US Dollar</div>
+          </div>
+          <button class="pf-action-btn" onclick="openModal('currency')">Change</button>
+        </div>
+      </div>
+
+      <!-- ACCOUNT ACTIONS -->
+      <div class="profile-section" style="border-color:rgba(255,77,109,.12); margin-bottom:40px;">
+        <div class="profile-section-header" style="border-color:rgba(255,77,109,.08);">
+          <span class="profile-section-title">Account Actions</span>
+        </div>
+        <div class="profile-field" style="border:none; gap:12px; flex-wrap:wrap; padding:14px 18px;">
+          <button class="pf-action-btn" onclick="showToast('info','Session Log','Showing active sessions...')">Active Sessions</button>
+          <button class="pf-action-btn" onclick="showToast('info','Activity Log','Loading account activity...')">Activity Log</button>
+          <button class="danger-btn" style="margin-left:auto;" onclick="showToast('sell','Close Account','Contact support@orion.trade to proceed')">Close Account</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- EDIT MODAL -->
+  <div id="profile-modal-overlay" onclick="closeModalOutside(event)">
+    <div class="profile-modal" id="profile-modal">
+      <div class="modal-title" id="modal-title">Edit Field</div>
+      <div class="modal-sub" id="modal-sub">Enter new value below</div>
+      <div id="modal-fields"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn-save" onclick="saveModal()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -1319,16 +1710,40 @@ function buildTickerTape() {
 // ─── VIEW SWITCHING ──────────────────────────────────────────────────────
 function switchView(view) {
   const tradeEls = ['market-panel','chart-panel','ob-panel','pos-panel','order-panel'];
-  const isWallet = view === 'wallet';
+  const isWallet  = view === 'wallet';
+  const isProfile = view === 'profile';
+  const isTrade   = view === 'trade';
+
+  // Trade panels: hide when not on trade view
   tradeEls.forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.style.display = isWallet ? 'none' : '';
+    if(el) el.style.display = (isWallet || isProfile) ? 'none' : '';
   });
+
+  // Wallet section
   const walletEl = document.getElementById('view-wallet');
   walletEl.classList.toggle('show', isWallet);
-  if(isWallet){ renderWalletView(); }
+  if(isWallet) renderWalletView();
+
+  // Profile section
+  const profileEl = document.getElementById('view-profile');
+  profileEl.classList.toggle('show', isProfile);
+  if(isProfile) refreshProfileStats();
+
+  // Topbar: hide on profile (it has its own)
+  const topbar = document.getElementById('topbar');
+  if(topbar) topbar.style.display = isProfile ? 'none' : '';
+
+  // Nav active states
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('btn-'+view)?.classList.add('active');
+  // Profile avatar highlight
+  const avatar = document.getElementById('btn-profile');
+  if(avatar) avatar.style.outline = isProfile ? '2px solid var(--accent)' : 'none';
+}
+
+function refreshProfileStats() {
+  // Nothing to refresh — stats bar removed per design
 }
 
 // ─── MISC ────────────────────────────────────────────────────────────────
@@ -1428,6 +1843,170 @@ function showToast(type, title, sub) {
   container.appendChild(t);
   setTimeout(() => t.style.opacity='0', 3500);
   setTimeout(() => t.remove(), 3800);
+}
+
+
+// ─── PROFILE ─────────────────────────────────────────────────────────────
+let modalTarget = null;
+
+const MODAL_CONFIG = {
+  username: {
+    title:'Change Username', sub:'Your username is shown publicly on the leaderboard.',
+    fields:[{id:'new-username', label:'New Username', type:'text', placeholder:'e.g. TraderX92', current:'D.Harrison'}]
+  },
+  email: {
+    title:'Change Email Address', sub:'A verification link will be sent to your new email.',
+    fields:[
+      {id:'new-email', label:'New Email', type:'email', placeholder:'you@example.com'},
+      {id:'confirm-email', label:'Confirm Email', type:'email', placeholder:'Confirm new email'},
+      {id:'confirm-pass', label:'Current Password', type:'password', placeholder:'Enter your password'}
+    ]
+  },
+  phone: {
+    title:'Change Phone Number', sub:'An SMS code will be sent to verify your new number.',
+    fields:[
+      {id:'new-phone', label:'Phone Number', type:'tel', placeholder:'+44 7xxx xxx xxx'},
+      {id:'sms-code', label:'SMS Code', type:'text', placeholder:'Will be sent after submit'}
+    ]
+  },
+  password: {
+    title:'Change Password', sub:'Must be at least 12 characters with uppercase, numbers and symbols.',
+    fields:[
+      {id:'cur-pass', label:'Current Password', type:'password', placeholder:'Current password'},
+      {id:'new-pass', label:'New Password', type:'password', placeholder:'Min. 12 characters'},
+      {id:'conf-pass', label:'Confirm Password', type:'password', placeholder:'Repeat new password'}
+    ]
+  },
+  'btc-address': {
+    title:'Edit BTC Withdrawal Address', sub:'Changes require 24h security hold on withdrawals.',
+    fields:[{id:'btc-addr', label:'BTC Address', type:'text', placeholder:'bc1q...'}]
+  },
+  'eth-address': {
+    title:'Edit ETH Withdrawal Address', sub:'Changes require 24h security hold on withdrawals.',
+    fields:[{id:'eth-addr', label:'ETH Address', type:'text', placeholder:'0x...'}]
+  },
+  address: {
+    title:'Add Withdrawal Address', sub:'Saved addresses are subject to the withdrawal whitelist.',
+    fields:[
+      {id:'new-coin', label:'Asset', type:'text', placeholder:'e.g. SOL, BNB'},
+      {id:'new-addr', label:'Address', type:'text', placeholder:'Paste wallet address'}
+    ]
+  },
+  'api-key': {
+    title:'Create API Key', sub:'Read-only keys are recommended for safety.',
+    fields:[
+      {id:'key-name', label:'Key Label', type:'text', placeholder:'e.g. TradingBot_1'},
+      {id:'key-perms', label:'Permissions', type:'text', placeholder:'read / trade / withdraw'}
+    ]
+  },
+  language: {
+    title:'Change Language', sub:'Interface language preference.',
+    fields:[{id:'lang-sel', label:'Language', type:'text', placeholder:'e.g. English (UK), Deutsch'}]
+  },
+  currency: {
+    title:'Default Display Currency', sub:'All values will be shown in this currency.',
+    fields:[{id:'curr-sel', label:'Currency', type:'text', placeholder:'e.g. USD, GBP, EUR'}]
+  },
+};
+
+function openModal(target) {
+  const cfg = MODAL_CONFIG[target];
+  if(!cfg) return;
+  modalTarget = target;
+  document.getElementById('modal-title').textContent = cfg.title;
+  document.getElementById('modal-sub').textContent = cfg.sub;
+  document.getElementById('modal-fields').innerHTML = cfg.fields.map(f => `
+    <div class="modal-field">
+      <label class="modal-label">${f.label}</label>
+      <input class="modal-input" id="${f.id}" type="${f.type}" placeholder="${f.placeholder}" autocomplete="off">
+    </div>`).join('');
+  // Pre-fill current value if supplied
+  cfg.fields.forEach(f => {
+    if(f.current) { const el=document.getElementById(f.id); if(el) el.value=f.current; }
+  });
+  document.getElementById('profile-modal-overlay').classList.add('open');
+  // Focus first input
+  setTimeout(()=>{ const first=document.querySelector('#modal-fields .modal-input'); if(first) first.focus(); },100);
+}
+
+function closeModal() {
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  modalTarget = null;
+}
+
+function closeModalOutside(e) {
+  if(e.target.id === 'profile-modal-overlay') closeModal();
+}
+
+function saveModal() {
+  if(!modalTarget) return;
+  const cfg = MODAL_CONFIG[modalTarget];
+  // Basic validation
+  const inputs = document.querySelectorAll('#modal-fields .modal-input');
+  for(const inp of inputs) {
+    if(!inp.value.trim()) { inp.style.borderColor='var(--neg)'; inp.focus(); return; }
+    inp.style.borderColor='';
+  }
+  // Apply changes
+  if(modalTarget === 'username') {
+    const val = document.getElementById('new-username').value.trim();
+    document.getElementById('profile-display-name').textContent = val;
+    document.getElementById('pf-username-val').textContent = val;
+    document.getElementById('btn-profile').textContent = val[0].toUpperCase();
+    showToast('buy','Username Updated','Your new username is: '+val);
+  } else if(modalTarget === 'email') {
+    const val = document.getElementById('new-email').value.trim();
+    const masked = val.split('@')[0].slice(0,2)+'••••••@'+val.split('@')[1];
+    const el = document.getElementById('pf-email-val');
+    el.setAttribute('data-real', val);
+    el.setAttribute('data-masked', masked);
+    el.setAttribute('data-shown','false');
+    el.textContent = masked;
+    showToast('buy','Email Updated','Verification email sent to '+val);
+  } else if(modalTarget === 'phone') {
+    showToast('info','SMS Sent','Enter the code you receive to confirm');
+  } else if(modalTarget === 'password') {
+    showToast('buy','Password Changed','Your password has been updated successfully');
+  } else if(modalTarget === 'btc-address' || modalTarget === 'eth-address') {
+    showToast('info','Address Updated','24h withdrawal hold is now active');
+  } else if(modalTarget === 'api-key') {
+    const name = document.getElementById('key-name').value.trim();
+    showToast('buy','API Key Created',name+' — copy your secret key now, it won\'t be shown again');
+  } else {
+    showToast('buy','Saved','Your changes have been applied');
+  }
+  closeModal();
+}
+
+function toggleReveal(elId, btn) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const shown = el.getAttribute('data-shown') === 'true';
+  if(shown) {
+    el.textContent = el.getAttribute('data-masked');
+    el.setAttribute('data-shown','false');
+    btn.textContent = 'Show';
+  } else {
+    el.textContent = el.getAttribute('data-real');
+    el.setAttribute('data-shown','true');
+    btn.textContent = 'Hide';
+    // Auto-hide after 8s
+    setTimeout(()=>{ if(el.getAttribute('data-shown')==='true') { el.textContent=el.getAttribute('data-masked'); el.setAttribute('data-shown','false'); btn.textContent='Show'; } }, 8000);
+  }
+}
+
+function toggleSecurity(btn, name) {
+  const isOn = btn.classList.toggle('on');
+  // Update adjacent status label if present
+  const row = btn.closest('.security-row');
+  if(row) {
+    const lbl = row.querySelector('.sec-status');
+    if(lbl) {
+      lbl.textContent = isOn ? 'Enabled' : 'Disabled';
+      lbl.className = 'sec-status' + (isOn ? ' sec-status-on' : '');
+    }
+  }
+  showToast(isOn ? 'buy' : 'info', name, isOn ? 'Enabled' : 'Disabled');
 }
 
 function updateClock() {
