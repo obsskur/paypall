@@ -66,34 +66,42 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 #topbar {
   grid-column:2/5; grid-row:1/2;
   background:var(--bg1); border-bottom:1px solid var(--border);
-  display:flex; align-items:center; gap:0; padding:0;
+  display:flex; align-items:center; gap:0; padding:0; overflow:hidden;
 }
-.pair-tab {
-  height:100%; padding:0 20px;
-  display:flex; align-items:center; gap:8px;
-  border-right:1px solid var(--border);
-  cursor:pointer; transition:all .15s;
-  position:relative;
+/* Active pair identity block */
+#topbar-pair-id {
+  display:flex; align-items:center; gap:10px;
+  padding:0 16px; height:100%; border-right:1px solid var(--border);
+  flex-shrink:0; min-width:160px;
 }
-.pair-tab.active { background:var(--bg2); }
-.pair-tab.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--accent); }
-.pair-tab:hover { background:var(--bg2); }
-.pair-name { font-weight:600; font-size:13px; }
-.pair-price { font-family:var(--mono); font-size:12px; color:var(--text1); }
-.pair-change { font-family:var(--mono); font-size:10px; }
-.topbar-stats { display:flex; align-items:center; gap:24px; padding:0 20px; }
-.ts { display:flex; flex-direction:column; }
-.ts-label { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+#topbar-pair-id .coin-badge {
+  width:28px; height:28px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; flex-shrink:0;
+}
+#tb-pair-name { font-size:14px; font-weight:700; letter-spacing:.3px; }
+#tb-pair-price { font-family:var(--mono); font-size:18px; font-weight:700; line-height:1; }
+#tb-pair-change { font-family:var(--mono); font-size:11px; margin-top:1px; }
+/* Stats strip */
+#topbar-stats {
+  display:flex; align-items:center; gap:0; flex:1; overflow:hidden; height:100%;
+  min-width:0;
+}
+.ts {
+  display:flex; flex-direction:column; justify-content:center;
+  padding:0 14px; height:100%; border-right:1px solid var(--border);
+  flex-shrink:0;
+}
+.ts-label { font-size:9px; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px; }
 .ts-val { font-family:var(--mono); font-size:12px; font-weight:500; }
-.topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; padding:0 16px; }
-#clock { font-family:var(--mono); font-size:11px; color:var(--text2); }
+.topbar-right { display:flex; align-items:center; gap:8px; padding:0 12px; flex-shrink:0; }
+#clock { font-family:var(--mono); font-size:10px; color:var(--text2); }
 .btn-small {
-  height:28px; padding:0 12px; border-radius:6px; border:none;
+  height:26px; padding:0 10px; border-radius:5px; border:none;
   font-family:var(--sans); font-size:11px; font-weight:600; cursor:pointer; transition:all .15s;
 }
 .btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text0); }
 .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
-#notif-dot { width:6px; height:6px; background:var(--neg); border-radius:50%; position:absolute; top:8px; right:8px; }
 
 /* ───────── MARKET LIST ───────── */
 #market-panel {
@@ -360,16 +368,28 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 
   <!-- TOPBAR -->
   <header id="topbar">
-    <div id="pair-tabs"></div>
-    <div class="topbar-stats" id="topbar-stats">
+    <!-- Active pair identity -->
+    <div id="topbar-pair-id">
+      <div class="coin-badge" id="tb-coin-badge" style="background:#f7931a22; color:#f7931a;">₿</div>
+      <div>
+        <div id="tb-pair-name">BTC/USDT</div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <div id="tb-pair-price" style="color:var(--pos)">—</div>
+          <div id="tb-pair-change" style="color:var(--pos)">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- Live 24h stats from Binance REST -->
+    <div id="topbar-stats">
+      <div class="ts"><span class="ts-label">24h Change</span><span class="ts-val" id="stat-chg">—</span></div>
       <div class="ts"><span class="ts-label">24h High</span><span class="ts-val" id="stat-high">—</span></div>
       <div class="ts"><span class="ts-label">24h Low</span><span class="ts-val" id="stat-low">—</span></div>
-      <div class="ts"><span class="ts-label">24h Vol</span><span class="ts-val" id="stat-vol">—</span></div>
-      <div class="ts"><span class="ts-label">Open Interest</span><span class="ts-val" id="stat-oi">—</span></div>
+      <div class="ts"><span class="ts-label">24h Volume</span><span class="ts-val" id="stat-vol">—</span></div>
+      <div class="ts"><span class="ts-label">24h Quote Vol</span><span class="ts-val" id="stat-qvol">—</span></div>
+      <div class="ts"><span class="ts-label">Trades</span><span class="ts-val" id="stat-trades">—</span></div>
     </div>
     <div class="topbar-right">
       <span id="clock">00:00:00 UTC</span>
-      <button class="btn-small btn-outline">API</button>
       <button class="btn-small btn-outline" onclick="switchView('wallet')">Portfolio</button>
     </div>
   </header>
@@ -390,7 +410,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   <!-- CHART PANEL -->
   <main id="chart-panel">
     <div class="chart-toolbar">
-      <span style="font-size:11px; color:var(--text1); margin-right:6px; font-weight:600;" id="chart-pair-label">BTCUSDT</span>
+      <span style="font-size:11px; color:var(--text1); margin-right:6px; font-weight:600;" id="chart-pair-label">BTC/USDT</span>
       <div class="chart-sep"></div>
       <button class="tf-btn" onclick="setTF(this,'1')">1m</button>
       <button class="tf-btn" onclick="setTF(this,'5')">5m</button>
@@ -588,7 +608,6 @@ let depthCtx = null;
 
 // ─── INIT ─────────────────────────────────────────────────────────────────
 window.onload = () => {
-  buildPairTabs();
   buildMarketList();
   buildTickerTape();
   initTradingView();
@@ -597,9 +616,32 @@ window.onload = () => {
   setInterval(updateClock, 1000);
   renderPositions();
   renderWalletView();
+  // Fetch real REST stats for active pair immediately
+  fetchTickerStats(activePair);
+  // Fetch all market pairs from REST for market list population
+  fetchAllTickers();
+  // Refresh REST stats every 10s as fallback
+  setInterval(() => fetchTickerStats(activePair), 10000);
+  setInterval(fetchAllTickers, 30000);
   setPriceInForm();
-  setTimeout(() => showToast('info','Market Connected','Live data stream active — all prices are simulated'), 800);
+  setTimeout(() => showToast('info','Orion Exchange','Connected to live market data'), 600);
 };
+
+// Fetch all 24h tickers from Binance REST to populate market list
+async function fetchAllTickers() {
+  try {
+    const symbols = JSON.stringify(PAIRS);
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols='+encodeURIComponent(symbols));
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+    data.forEach(d => {
+      const pair = d.symbol;
+      prices[pair] = parseFloat(d.lastPrice);
+      changes[pair] = parseFloat(d.priceChangePercent);
+      updateMarketRowFromRest(pair, parseFloat(d.lastPrice), parseFloat(d.priceChangePercent), parseFloat(d.quoteVolume));
+    });
+  } catch(e) { /* WS fallback already running */ }
+}
 
 // ─── WEBSOCKET ────────────────────────────────────────────────────────────
 let wsTickerAlive = false;
@@ -664,13 +706,18 @@ function onTickerUpdate(d) {
   changes[d.s] = parseFloat(d.P);
   updateMarketRow(d);
   if(d.s === activePair) {
-    document.getElementById('ob-mid').textContent = parseFloat(d.c).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-    document.getElementById('ob-mid').style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
-    document.getElementById('stat-high').textContent = '$'+parseFloat(d.h).toLocaleString();
-    document.getElementById('stat-low').textContent = '$'+parseFloat(d.l).toLocaleString();
-    document.getElementById('stat-vol').textContent = (parseFloat(d.q)/1e9).toFixed(2)+'B';
-    document.getElementById('stat-oi').textContent = '$'+(parseFloat(d.q)/1e9*0.4).toFixed(2)+'B';
-    updatePairTab(d);
+    // Feed topbar from WS stream data (same fields as REST 24hr ticker)
+    applyTickerStats({
+      symbol: d.s,
+      lastPrice: d.c,
+      priceChangePercent: d.P,
+      priceChange: d.p,
+      highPrice: d.h,
+      lowPrice: d.l,
+      volume: d.v,
+      quoteVolume: d.q,
+      count: d.n
+    });
   }
 }
 
@@ -736,43 +783,93 @@ function setTF(btn, tf) {
 
 // ─── PAIR TABS ────────────────────────────────────────────────────────────
 function buildPairTabs() {
-  const tabs = document.getElementById('pair-tabs');
-  const favPairs = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT'];
-  tabs.innerHTML = favPairs.map(p => {
-    const coin = p.replace('USDT','');
-    return `<div class="pair-tab ${p===activePair?'active':''}" id="ptab-${p}" onclick="switchPair('${p}')">
-      <div class="coin-icon" style="background:${COIN_COLORS[coin]}22; color:${COIN_COLORS[coin]}; width:20px; height:20px; border-radius:4px; font-size:10px;">${COIN_LABELS[coin]||coin[0]}</div>
-      <div>
-        <div class="pair-name">${coin}/USDT</div>
-        <div class="pair-price" id="ptab-p-${p}">—</div>
-      </div>
-      <div class="pair-change" id="ptab-c-${p}" style="color:var(--pos)">+0.00%</div>
-    </div>`;
-  }).join('');
+  // No duplicate pair tabs in topbar - topbar shows active pair stats only
+}
+
+// Fetch 24h ticker stats from Binance REST API for the active pair
+async function fetchTickerStats(symbol) {
+  try {
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+    if(!res.ok) throw new Error('REST failed');
+    const d = await res.json();
+    applyTickerStats(d);
+  } catch(e) {
+    // If REST blocked, stats will be fed from WS stream
+  }
+}
+
+function applyTickerStats(d) {
+  const coin = (d.symbol||activePair).replace('USDT','');
+  const price = parseFloat(d.lastPrice||d.c||0);
+  const chgPct = parseFloat(d.priceChangePercent||d.P||0);
+  const chgAmt = parseFloat(d.priceChange||0);
+  const high = parseFloat(d.highPrice||d.h||0);
+  const low  = parseFloat(d.lowPrice||d.l||0);
+  const vol  = parseFloat(d.volume||d.v||0);    // base asset vol
+  const qvol = parseFloat(d.quoteVolume||d.q||0); // USDT vol
+  const trades = parseInt(d.count||d.n||0);
+
+  prices[activePair] = price;
+  changes[activePair] = chgPct;
+
+  const color = COIN_COLORS[coin]||'#888';
+  const badge = document.getElementById('tb-coin-badge');
+  if(badge){ badge.style.background=color+'22'; badge.style.color=color; badge.textContent=COIN_LABELS[coin]||coin[0]; }
+  document.getElementById('tb-pair-name').textContent = coin+'/USDT';
+  const priceEl = document.getElementById('tb-pair-price');
+  if(priceEl){ priceEl.textContent='$'+price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?6:2}); priceEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  const chgEl = document.getElementById('tb-pair-change');
+  if(chgEl){ chgEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'% ('+(chgAmt>=0?'+':'')+chgAmt.toFixed(2)+')'; chgEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+
+  const statChg = document.getElementById('stat-chg');
+  if(statChg){ statChg.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; statChg.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  document.getElementById('stat-high').textContent='$'+high.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById('stat-low').textContent='$'+low.toLocaleString(undefined,{minimumFractionDigits:2});
+  // Volume: show in millions or billions
+  const volStr = vol>=1e9?(vol/1e9).toFixed(2)+'B':(vol>=1e6?(vol/1e6).toFixed(2)+'M':(vol>=1e3?(vol/1e3).toFixed(2)+'K':vol.toFixed(2)));
+  document.getElementById('stat-vol').textContent = volStr+' '+coin;
+  const qvolStr = qvol>=1e9?'$'+(qvol/1e9).toFixed(2)+'B':'$'+(qvol/1e6).toFixed(2)+'M';
+  document.getElementById('stat-qvol').textContent = qvolStr;
+  const tradesStr = trades>=1e6?(trades/1e6).toFixed(2)+'M':(trades>=1e3?(trades/1e3).toFixed(0)+'K':trades.toString());
+  document.getElementById('stat-trades').textContent = tradesStr;
+
+  document.getElementById('ob-mid').textContent = price.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById('ob-mid').style.color = chgPct>=0?'var(--pos)':'var(--neg)';
+
+  // Update market list row too
+  updateMarketRowFromRest(activePair, price, chgPct, qvol);
+}
+
+function updateMarketRowFromRest(pair, price, chgPct, qvol) {
+  const pEl = document.getElementById('mprice-'+pair);
+  const cEl = document.getElementById('mchg-'+pair);
+  const vEl = document.getElementById('mvol-'+pair);
+  if(pEl) pEl.textContent = price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?6:2});
+  if(cEl){ cEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; cEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  if(vEl) vEl.textContent='Vol '+(qvol>=1e9?(qvol/1e9).toFixed(2)+'B':(qvol/1e6).toFixed(2)+'M');
 }
 
 function updatePairTab(d) {
-  const pEl = document.getElementById('ptab-p-'+d.s);
-  const cEl = document.getElementById('ptab-c-'+d.s);
-  if(pEl) pEl.textContent = '$'+parseFloat(d.c).toLocaleString(undefined,{minimumFractionDigits:2});
-  if(cEl){ cEl.textContent=(d.P>=0?'+':'')+parseFloat(d.P).toFixed(2)+'%'; cEl.style.color=d.P>=0?'var(--pos)':'var(--neg)'; }
+  // Pair tabs removed - topbar now shows active pair stats via applyTickerStats()
 }
 
 function switchPair(pair) {
   activePair = pair;
-  document.querySelectorAll('.pair-tab').forEach(t=>t.classList.remove('active'));
-  const tab = document.getElementById('ptab-'+pair);
-  if(tab) tab.classList.add('active');
   document.querySelectorAll('.mrow').forEach(r=>{r.classList.remove('active'); if(r.dataset.pair===pair) r.classList.add('active');});
   const coin = pair.replace('USDT','');
-  document.getElementById('chart-pair-label').textContent = pair;
+  document.getElementById('chart-pair-label').textContent = coin+'/USDT';
   document.getElementById('f-unit').textContent = coin;
   document.getElementById('exec-btn').textContent = (orderSide==='buy'?'Buy ':'Sell ')+coin;
   setPriceInForm();
+  // Fetch fresh REST stats immediately
+  fetchTickerStats(pair);
   if(tvWidget && typeof tvWidget.setSymbol === 'function') {
     tvWidget.setSymbol('BINANCE:'+pair, currentTF);
   } else { initTradingView(); }
-  renderFakeOB();
+  // Reconnect depth WS for new pair
+  wsDepthAlive = false;
+  if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; }
+  connectDepthWS();
 }
 
 // ─── MARKET LIST ──────────────────────────────────────────────────────────
@@ -781,30 +878,33 @@ function buildMarketList() {
   list.innerHTML = PAIRS.map(p => {
     const coin = p.replace('USDT','');
     const price = prices[p] || 0;
+    const dp = price < 1 ? 5 : 2;
     return `<div class="mrow ${p===activePair?'active':''}" id="mrow-${p}" data-pair="${p}" onclick="switchPair('${p}')">
       <div class="mrow-left">
         <div class="coin-icon" style="background:${COIN_COLORS[coin]}22; color:${COIN_COLORS[coin]};">${COIN_LABELS[coin]||coin[0]}</div>
         <div>
-          <div class="mrow-name">${coin}</div>
-          <div class="mrow-vol" id="mvol-${p}">Vol —</div>
+          <div class="mrow-name">${coin}<span style="font-size:9px; color:var(--text2); margin-left:2px;">/USDT</span></div>
+          <div class="mrow-vol" id="mvol-${p}">Loading...</div>
         </div>
       </div>
       <div class="mrow-right">
-        <div class="mrow-price" id="mprice-${p}">${price.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
-        <div class="mrow-chg" id="mchg-${p}" style="color:var(--pos)">+0.00%</div>
+        <div class="mrow-price" id="mprice-${p}">${price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:dp})}</div>
+        <div class="mrow-chg" id="mchg-${p}" style="color:var(--text2)">—</div>
       </div>
     </div>`;
   }).join('');
 }
 
 function updateMarketRow(d) {
+  const price = parseFloat(d.c);
+  const chgPct = parseFloat(d.P);
+  const qvol = parseFloat(d.q);
   const pEl = document.getElementById('mprice-'+d.s);
   const cEl = document.getElementById('mchg-'+d.s);
   const vEl = document.getElementById('mvol-'+d.s);
-  if(pEl) pEl.textContent = parseFloat(d.c).toLocaleString(undefined,{minimumFractionDigits:2});
-  if(cEl){ cEl.textContent=(d.P>=0?'+':'')+parseFloat(d.P).toFixed(2)+'%'; cEl.style.color=d.P>=0?'var(--pos)':'var(--neg)'; }
-  if(vEl) vEl.textContent='Vol '+(parseFloat(d.q)/1e6).toFixed(1)+'M';
-  updatePairTab(d);
+  if(pEl) pEl.textContent = price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?5:2});
+  if(cEl){ cEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; cEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  if(vEl) vEl.textContent='Vol '+(qvol>=1e9?(qvol/1e9).toFixed(1)+'B':(qvol/1e6).toFixed(1)+'M');
 }
 
 function updateMarketRowById(pair) {
