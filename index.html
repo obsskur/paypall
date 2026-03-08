@@ -68,6 +68,10 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   grid-column:2/5; grid-row:1/2;
   background:var(--bg1); border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:0; padding:0; overflow:hidden;
+  transition:none;
+}
+#topbar.hidden {
+  visibility:hidden; pointer-events:none; opacity:0;
 }
 /* Active pair identity block */
 #topbar-pair-id {
@@ -266,7 +270,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 
 /* ───────── WALLET VIEW ───────── */
 #view-wallet {
-  display:none; grid-column:2/5; grid-row:2/4;
+  display:none; grid-column:2/5; grid-row:1/4;
   overflow-y:auto; overflow-x:hidden;
   background:var(--bg0);
 }
@@ -1573,9 +1577,28 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
       </div>
 
       <!-- Daily limit banner -->
-      <div class="wd-banner wd-banner-info" id="wd-limit-banner">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="wd-limit-text">Daily limit: <strong>£8,500</strong> remaining · Resets in <strong id="wd-reset-timer">—</strong></span>
+      <div id="wd-limit-banner" style="background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:3px;">Daily Withdrawal Limit</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span id="wd-limit-remaining-val" style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--text0);">—</span>
+              <span style="font-size:11px;color:var(--text2);">remaining</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:3px;">Resets in</div>
+            <div id="wd-reset-timer" style="font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text1);">—</div>
+          </div>
+        </div>
+        <!-- Progress bar -->
+        <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:8px;">
+          <div id="wd-limit-bar" style="height:100%;border-radius:3px;background:var(--accent);transition:width .4s ease;width:100%;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);">
+          <span><span id="wd-limit-used-val" style="color:var(--text1);font-family:var(--mono);font-weight:600;">—</span> used</span>
+          <span>Limit: <span id="wd-limit-total-val" style="color:var(--text1);font-family:var(--mono);font-weight:600;">—</span></span>
+        </div>
       </div>
 
       <!-- Step 1: Payment method -->
@@ -2990,7 +3013,7 @@ function switchView(view) {
 
   // Topbar: hide on profile (has its own bar)
   const topbar = document.getElementById('topbar');
-  if(topbar) topbar.style.display = isOverlay ? 'none' : '';
+  if(topbar) topbar.classList.toggle('hidden', isOverlay);
 
   // Nav states
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -4130,15 +4153,28 @@ function renderWithdrawView() {
 }
 
 function updateWDLimitBanner() {
+  const totalUSD     = wdDailyLimitUSD();
   const remainingUSD = wdRemainingUSD();
-  const remainingDisplay = toCurrency(remainingUSD);
-  const limitDisplay = toCurrency(wdDailyLimitUSD());
-  const el = document.getElementById('wd-limit-text');
-  if(el) el.innerHTML = `Daily limit: <strong>${limitDisplay}</strong> remaining <span style="color:var(--text2);">(${toCurrency(wdDailyUsedUSD)} used)</span> · Resets in <strong id="wd-reset-timer">—</strong>`;
-  updateWDTimer();
-  // Also update the limits grid
+  const usedUSD      = wdDailyUsedUSD;
+  const pctRemaining = totalUSD > 0 ? (remainingUSD / totalUSD) * 100 : 100;
+
+  // Bar colour: green → amber → red as limit drains
+  const barColor = pctRemaining > 50 ? 'var(--accent)' : pctRemaining > 20 ? '#f0b429' : 'var(--neg)';
+
+  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  const setStyle = (id, prop, val) => { const e = document.getElementById(id); if(e) e.style[prop] = val; };
+
+  setEl('wd-limit-remaining-val', toCurrency(remainingUSD));
+  setEl('wd-limit-used-val',      toCurrency(usedUSD));
+  setEl('wd-limit-total-val',     toCurrency(totalUSD));
+  setStyle('wd-limit-bar', 'width',      pctRemaining.toFixed(1) + '%');
+  setStyle('wd-limit-bar', 'background', barColor);
+
+  // Limits grid (step 2)
   const dailyEl = document.getElementById('wd-limit-daily');
-  if(dailyEl) dailyEl.textContent = remainingDisplay + ' left';
+  if(dailyEl) dailyEl.textContent = toCurrency(remainingUSD) + ' left';
+
+  updateWDTimer();
 }
 
 function updateWDTimer() {
@@ -4269,7 +4305,13 @@ function pickWDCoin(coin) {
   wdCoin = coin;
   closeWDCoinPicker();
   updateWDCoinSelector();
-  document.getElementById('wd-amount').value = '';
+  // Pre-fill with max allowed (balance vs limit), so user sees real ceiling immediately
+  const price    = prices[coin+'USDT']||(coin==='USDT'?1:0);
+  const available = portfolio.balances[coin]||0;
+  const maxByLimit = price > 0 ? wdRemainingUSD() / price : 0;
+  const maxAmt   = Math.min(available, maxByLimit);
+  const input    = document.getElementById('wd-amount');
+  if(input) input.value = maxAmt > 0 ? maxAmt.toFixed(8).replace(/\.?0+$/,'') : '';
   calcWDOutput();
 }
 
