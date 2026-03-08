@@ -1254,14 +1254,34 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
             </div>
           </div>
           <div style="text-align:right; margin-top:4px; font-size:11px; color:var(--text2);" id="conv-in-fiat">≈ —</div>
+          <div id="conv-balance-warn" style="display:none; margin-top:6px; font-size:11px; color:var(--neg); text-align:right; font-weight:500;">⚠ Exceeds available balance</div>
         </div>
 
-        <!-- Swap arrow -->
-        <div style="display:flex; justify-content:center; align-items:center; padding:0; position:relative; height:0; z-index:2;">
-          <button onclick="swapConvCoins()" style="width:32px; height:32px; border-radius:50%; background:var(--bg2); border:2px solid var(--border); color:var(--text1); cursor:pointer; display:flex; align-items:center; justify-content:center; position:absolute; top:-16px; transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text1)'">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <!-- Swap button -->
+        <div style="display:flex; justify-content:center; align-items:center; position:relative; height:0; z-index:2;">
+          <button id="conv-swap-btn" onclick="swapConvCoins()" style="
+            position:absolute; top:-18px;
+            width:36px; height:36px; border-radius:10px;
+            background:var(--bg3); border:2px solid var(--border2);
+            color:var(--text1); cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            transition:all .18s; box-shadow:0 2px 8px rgba(0,0,0,.3);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"/>
+              <line x1="4" y1="20" x2="21" y2="3"/>
+              <polyline points="21 16 21 21 16 21"/>
+              <line x1="15" y1="15" x2="21" y2="21"/>
+            </svg>
           </button>
         </div>
+        <style>
+          #conv-swap-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+            transform: rotate(90deg) scale(1.08);
+          }
+        </style>
 
         <!-- To -->
         <div style="padding:16px 18px;">
@@ -2754,25 +2774,40 @@ function updateConvUI() {
 }
 
 function convCalcOutput() {
-  const amtIn = parseFloat(document.getElementById('conv-amount-in').value) || 0;
+  const inputEl = document.getElementById('conv-amount-in');
+  const warnEl  = document.getElementById('conv-balance-warn');
+  const btnEl   = document.getElementById('conv-btn');
+  const amtIn   = parseFloat(inputEl.value) || 0;
+  const maxBal  = portfolio.balances[convFromCoin] || 0;
+
+  // Validate against available balance
+  const overBalance = amtIn > maxBal && amtIn > 0;
+  if(warnEl) warnEl.style.display = overBalance ? '' : 'none';
+  if(btnEl) {
+    btnEl.disabled = overBalance;
+    btnEl.style.opacity = overBalance ? '.4' : '1';
+    btnEl.style.cursor = overBalance ? 'not-allowed' : 'pointer';
+  }
+
   const fromP = getConvPrice(convFromCoin);
   const toP   = getConvPrice(convToCoin);
-  const usdVal = amtIn * fromP;
-  const amtOut = usdVal / toP;
+  const usdVal   = amtIn * fromP;
+  const amtOut   = usdVal / toP;
   const afterFee = amtOut * 0.999;
 
   if(amtIn > 0) {
     document.getElementById('conv-amount-out').value = afterFee.toFixed(6).replace(/\.?0+$/,'');
     document.getElementById('conv-in-fiat').textContent  = '≈ ' + toCurrency(usdVal);
-    document.getElementById('conv-out-fiat').textContent = '≈ ' + toCurrency(amtOut * toP * 0.999);
+    document.getElementById('conv-out-fiat').textContent = '≈ ' + toCurrency(afterFee * toP);
     document.getElementById('conv-receive-val').textContent = afterFee.toFixed(8).replace(/0+$/,'0') + ' ' + convToCoin;
-    document.getElementById('conv-btn').textContent = `Preview Convert ${amtIn} ${convFromCoin} → ${afterFee.toFixed(6)} ${convToCoin}`;
+    if(btnEl && !overBalance) btnEl.textContent = `Preview Convert ${amtIn} ${convFromCoin} → ${afterFee.toFixed(6)} ${convToCoin}`;
+    else if(btnEl && overBalance) btnEl.textContent = 'Insufficient Balance';
   } else {
     document.getElementById('conv-amount-out').value = '';
     document.getElementById('conv-in-fiat').textContent = '≈ —';
     document.getElementById('conv-out-fiat').textContent = '≈ —';
     document.getElementById('conv-receive-val').textContent = '—';
-    document.getElementById('conv-btn').textContent = 'Preview Convert';
+    if(btnEl) { btnEl.textContent = 'Preview Convert'; btnEl.disabled = false; btnEl.style.opacity='1'; btnEl.style.cursor='pointer'; }
   }
 }
 
@@ -2830,7 +2865,11 @@ function executeConvert() {
   const amtIn = parseFloat(amtInStr);
   if(!amtIn || amtIn <= 0) { showToast('info','Convert','Enter an amount to convert'); return; }
   const bal = portfolio.balances[convFromCoin] || 0;
-  if(amtIn > bal) { showToast('sell','Insufficient Balance',`You have ${bal.toLocaleString()} ${convFromCoin}`); return; }
+  if(amtIn > bal) {
+    showToast('sell','Insufficient Balance',`You have ${bal.toLocaleString(undefined,{maximumFractionDigits:8})} ${convFromCoin} available`);
+    convCalcOutput(); // re-validate UI state
+    return;
+  }
 
   const fromP = getConvPrice(convFromCoin);
   const toP   = getConvPrice(convToCoin);
