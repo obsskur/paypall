@@ -59,18 +59,17 @@
     <nav>
         <button class="nav-item active" onclick="showSection('trade', this)"><i data-lucide="candlestick-chart"></i></button>
         <button class="nav-item" onclick="showSection('wallet', this)"><i data-lucide="wallet"></i></button>
-        <button class="nav-item" onclick="showSection('security', this)"><i data-lucide="shield"></i></button>
         <div style="flex:1"></div>
-        <button class="nav-item" onclick="toggleTheme()"><i data-lucide="sun"></i></button>
+        <button class="nav-item" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
     </nav>
 
     <div class="viewport">
         <header>
-            <div style="font-weight:900; color:var(--accent); letter-spacing:1px;">ORION PRO</div>
-            <div id="h-pair" style="font-family:var(--font-mono); font-weight:700">BTC/USDT</div>
+            <div style="font-weight:900; color:var(--accent); letter-spacing:1px;">ORION PRO V10</div>
+            <div id="h-pair" style="font-family:var(--font-mono); font-weight:700">BTC / USDT</div>
             <div style="display:flex; gap:15px; color:var(--dim)">
-                <span>24h Change <b id="h-change" style="color:var(--pos)">+0.00%</b></span>
-                <span>Vol <b style="color:#fff">1.24B</b></span>
+                <span>24h <b id="h-change" style="color:var(--pos)">0.00%</b></span>
+                <span>VOL <b style="color:#fff">1.24B</b></span>
             </div>
             <div style="flex:1"></div>
             <div id="clock" style="font-family:var(--font-mono); color:var(--dim); font-size:10px;">00:00:00 UTC</div>
@@ -79,7 +78,7 @@
         <section id="view-trade" class="view-section active">
             <div class="trade-grid">
                 <div class="panel">
-                    <div class="panel-h">Market Selection</div>
+                    <div class="panel-h">Markets</div>
                     <div id="market-list" style="overflow-y:auto; flex: 1;"></div>
                 </div>
 
@@ -88,14 +87,14 @@
                 </div>
 
                 <div class="panel" style="border-left:1px solid var(--border)">
-                    <div class="panel-h">Order Book (Real-time)</div>
+                    <div class="panel-h">Order Book</div>
                     <div id="asks" style="display:flex; flex-direction:column-reverse; flex:1; overflow:hidden"></div>
                     <div id="mid-price" style="padding:10px; text-align:center; font-family:var(--font-mono); font-size:16px; font-weight:800; background:var(--sub); border-top:1px solid var(--border); border-bottom:1px solid var(--border)">0.00</div>
                     <div id="bids" style="flex:1; overflow:hidden"></div>
                     
                     <div class="exec-bar">
                         <div style="background:var(--bg); padding:8px; border-radius:4px; display:flex; border: 1px solid var(--border)">
-                            <input type="number" id="trade-qty" placeholder="Quantity" style="background:transparent; border:none; color:#fff; flex:1; font-family:var(--font-mono); font-size:12px;">
+                            <input type="number" id="trade-qty" placeholder="Amount" style="background:transparent; border:none; color:#fff; flex:1; font-family:var(--font-mono); font-size:12px;">
                             <span id="trade-unit" style="font-size:9px; font-weight:900; align-self:center; color:var(--dim)">BTC</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
@@ -116,7 +115,7 @@
                 </div>
 
                 <div class="panel" style="border-top:1px solid var(--border); border-left:1px solid var(--border)">
-                    <div class="panel-h">Execution Log</div>
+                    <div class="panel-h">Terminal Log</div>
                     <div id="trade-log" style="overflow-y:auto; flex:1; font-size:9px; font-family:var(--font-mono); color:var(--dim); padding:10px;"></div>
                 </div>
             </div>
@@ -124,14 +123,9 @@
     </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('orion_v10_pro')) || {
-        wallet: 50000.00,
-        positions: [],
-        active: 'BTCUSDT',
-        log: [],
-        theme: 'dark'
-    };
-
+    const INITIAL_STATE = { wallet: 50000.00, positions: [], active: 'BTCUSDT', log: [], theme: 'dark' };
+    let state = JSON.parse(localStorage.getItem('orion_v10_pro')) || INITIAL_STATE;
+    
     let prices = {};
     const assets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'LINKUSDT', 'PEPEUSDT'];
     let tvWidget = null;
@@ -141,7 +135,7 @@
         initMarkets();
         setPair(state.active);
         startWS();
-        setInterval(engine, 100);
+        setInterval(engine, 200);
         setInterval(() => {
             const clock = document.getElementById('clock');
             if(clock) clock.innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC';
@@ -154,14 +148,18 @@
         const activeRow = document.getElementById('row-'+symbol);
         if(activeRow) activeRow.classList.add('active');
         
-        document.getElementById('trade-unit').innerText = symbol.replace('USDT','');
-        document.getElementById('h-pair').innerText = symbol.replace('USDT','') + ' / USDT';
+        const unit = symbol.replace('USDT','');
+        document.getElementById('trade-unit').innerText = unit;
+        document.getElementById('h-pair').innerText = unit + ' / USDT';
 
-        // Advanced Full UI Widget Configuration
+        // Destroy previous widget to prevent memory leaks and "undefined" property errors
+        const container = document.getElementById('tv_frame');
+        container.innerHTML = '';
+
         tvWidget = new TradingView.widget({
             "autosize": true,
             "symbol": "BINANCE:" + symbol,
-            "interval": "D",
+            "interval": "15",
             "timezone": "Etc/UTC",
             "theme": state.theme,
             "style": "1",
@@ -169,27 +167,10 @@
             "toolbar_bg": state.theme === 'dark' ? "#0a0c10" : "#f1f3f6",
             "enable_publishing": false,
             "withdateranges": true,
-            "hide_side_toolbar": false, // Drawing tools enabled
+            "hide_side_toolbar": false,
             "allow_symbol_change": true,
-            "save_image": true,
-            "details": true,
-            "hotlist": true,
-            "calendar": true,
-            "show_popup_button": true,
-            "popup_width": "1000",
-            "popup_height": "650",
             "container_id": "tv_frame",
-            "enabled_features": [
-                "study_templates",
-                "use_localstorage_for_settings_screens",
-                "header_saveload",
-                "header_settings",
-                "header_indicators",
-                "header_compare",
-                "header_undo_redo",
-                "header_screenshot",
-                "header_fullscreen_button"
-            ],
+            "enabled_features": ["study_templates", "header_indicators", "header_settings", "header_fullscreen_button"],
             "overrides": {
                 "paneProperties.background": state.theme === 'dark' ? "#030406" : "#ffffff",
                 "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.05)",
@@ -212,11 +193,12 @@
     function engine() {
         const tbody = document.getElementById('pos-table');
         if(!tbody) return;
-        tbody.innerHTML = '';
+        
+        let html = '';
         state.positions.forEach(p => {
             const mark = prices[p.sym] || p.entry;
             const diff = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
-            tbody.innerHTML += `<tr>
+            html += `<tr>
                 <td style="font-weight:700">${p.sym}</td>
                 <td style="color:${p.side==='long'?'var(--pos)':'var(--neg)'}">${p.side.toUpperCase()}</td>
                 <td>${p.qty}</td>
@@ -226,6 +208,7 @@
                 <td><button onclick="closePos(${p.id})" style="color:var(--dim); background:none; border:none; cursor:pointer; font-size:9px;">CLOSE</button></td>
             </tr>`;
         });
+        tbody.innerHTML = html;
     }
 
     function updateMarketUI(d) {
@@ -237,9 +220,13 @@
             chg.style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
         }
         if(d.s === state.active) {
-            document.getElementById('mid-price').innerText = parseFloat(d.c).toLocaleString();
-            document.getElementById('h-change').innerText = d.P + '%';
-            document.getElementById('h-change').style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
+            const mid = document.getElementById('mid-price');
+            const hchg = document.getElementById('h-change');
+            if(mid) mid.innerText = parseFloat(d.c).toLocaleString();
+            if(hchg) {
+                hchg.innerText = d.P + '%';
+                hchg.style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
+            }
             renderOB(parseFloat(d.c));
         }
     }
@@ -257,14 +244,18 @@
     }
 
     function renderOB(p) {
-        const ask = document.getElementById('asks'); const bid = document.getElementById('bids');
+        const ask = document.getElementById('asks'); 
+        const bid = document.getElementById('bids');
         if(!ask || !bid) return;
-        ask.innerHTML = ''; bid.innerHTML = '';
+        
+        let aHtml = ''; let bHtml = '';
         for(let i=11; i>=0; i--) {
             const offset = p * 0.0001 * i;
-            ask.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p + offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
-            bid.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p - offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
+            aHtml += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p + offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
+            bHtml += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p - offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
         }
+        ask.innerHTML = aHtml;
+        bid.innerHTML = bHtml;
     }
 
     function exec(side) {
@@ -276,9 +267,15 @@
         save();
     }
 
+    function closePos(id) {
+        state.positions = state.positions.filter(p => p.id !== id);
+        addLog(`POSITION CLOSED`);
+        save();
+    }
+
     function addLog(m) {
         const l = document.getElementById('trade-log');
-        l.innerHTML = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> ${m}</div>` + l.innerHTML;
+        if(l) l.innerHTML = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> ${m}</div>` + l.innerHTML;
     }
 
     function toggleTheme() {
@@ -289,7 +286,8 @@
     function showSection(id, el) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('view-'+id).classList.add('active');
+        const section = document.getElementById('view-'+id);
+        if(section) section.classList.add('active');
         el.classList.add('active');
     }
 
