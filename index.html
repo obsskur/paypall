@@ -85,7 +85,7 @@
         <button class="nav-item" title="Wallet" onclick="showSection('wallet', this)"><i data-lucide="wallet"></i></button>
         <button class="nav-item" title="Info" onclick="showSection('info', this)"><i data-lucide="info"></i></button>
         <div style="flex:1"></div>
-        <button class="nav-item" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
+        <button class="nav-item"><i data-lucide="moon"></i></button>
     </nav>
 
     <div class="viewport">
@@ -93,7 +93,7 @@
             <div style="font-weight:900; color:var(--accent); letter-spacing:1px;">ORION PRO V10</div>
             <div id="h-pair" style="font-family:var(--font-mono); font-weight:700">BTC / USDT</div>
             <div style="display:flex; gap:15px; color:var(--dim)">
-                <span>24h <b id="h-change" style="color:var(--pos)">0.00%</b></span>
+                <span>PNL <b id="h-change" style="color:var(--pos)">0.00%</b></span>
                 <span>VOL <b id="h-vol" style="color:#fff">---</b></span>
             </div>
             <div style="flex:1"></div>
@@ -110,9 +110,7 @@
                 <div class="panel">
                     <div class="panel-h">
                         Live Chart
-                        <select id="interval-select" onchange="changeInterval(this.value)">
-                            <option value="1">1m</option>
-                            <option value="5">5m</option>
+                        <select id="interval-select">
                             <option value="15" selected>15m</option>
                             <option value="60">1h</option>
                             <option value="D">1D</option>
@@ -159,12 +157,12 @@
         <section id="view-wallet" class="view-section">
             <div class="wallet-card">
                 <div class="stat-label">Total Equity (USD)</div>
-                <div id="w-equity">$50,000.00</div>
+                <div id="w-equity">$0.00</div>
                 
                 <div class="stat-grid">
                     <div class="stat-item">
                         <span class="stat-label">Wallet Balance</span>
-                        <span id="w-balance" class="stat-value">$50,000.00</span>
+                        <span id="w-balance" class="stat-value">$0.00</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Unrealized PNL</span>
@@ -177,33 +175,35 @@
                 </div>
 
                 <div class="chart-container">
-                    <div class="stat-label" style="margin-bottom:10px">PNL Performance (24H)</div>
+                    <div class="stat-label" style="margin-bottom:10px">PNL Performance (Live)</div>
                     <canvas id="pnl-sparkline" width="700" height="120"></canvas>
                 </div>
             </div>
         </section>
 
         <section id="view-info" class="view-section">
-            <div class="doc-container">
-                <h2 style="margin-bottom: 20px;">Orion V10.0 Pro Notes</h2>
-                <div class="doc-item">
-                    <h3>Margin & Risk</h3>
-                    <p>Validation: Orders are rejected if <code>Price * Qty > Available Balance</code>.</p>
-                </div>
-                <div class="doc-item">
-                    <h3>Performance Tracking</h3>
-                    <p>Sparkline updates every 5 seconds to track equity fluctuations based on mark price and PNL jitter.</p>
-                </div>
+            <div style="padding: 40px;">
+                <h2 style="margin-bottom: 20px; color: var(--accent);">Orion V10.0 Pro Notes</h2>
+                <p style="color: var(--dim);">System operating in High-Fidelity Simulation Mode.</p>
             </div>
         </section>
     </div>
 
 <script>
-    const INITIAL_STATE = { wallet: 50000.00, positions: [], active: 'BTCUSDT', interval: '15', theme: 'dark' };
-    let state = JSON.parse(localStorage.getItem('orion_v10_pro')) || INITIAL_STATE;
+    const INITIAL_STATE = { 
+        wallet: 75240.50, 
+        positions: [
+            {id: 1, sym:'BTCUSDT', side:'long', qty:0.85, entry:48200.50},
+            {id: 2, sym:'ETHUSDT', side:'short', qty:12.4, entry:3150.20}
+        ], 
+        active: 'BTCUSDT', 
+        interval: '15', 
+        theme: 'dark' 
+    };
     
+    let state = JSON.parse(localStorage.getItem('orion_v10_pro')) || INITIAL_STATE;
     let prices = {};
-    let sparkData = [50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000];
+    let sparkData = new Array(20).fill(state.wallet);
     const assets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'LINKUSDT', 'PEPEUSDT'];
     let pnlChart = null;
 
@@ -213,8 +213,13 @@
         initChart();
         setPair(state.active);
         startWS();
-        setInterval(engine, 200);
-        setInterval(updateSparkline, 5000);
+        
+        // Initial Logs for Flex
+        ['BUY 0.85 BTC @ $48,200', 'SELL 12.4 ETH @ $3,150'].forEach(m => addLog(`MARKET ${m}`));
+
+        // High Frequency Logic Loops
+        setInterval(engine, 100); 
+        setInterval(updateSparkline, 500); // 0.5s update for "Live" feel
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC';
         }, 1000);
@@ -225,7 +230,7 @@
         pnlChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: new Array(10).fill(''),
+                labels: new Array(20).fill(''),
                 datasets: [{
                     data: sparkData,
                     borderColor: '#0ecb81',
@@ -238,29 +243,39 @@
             },
             options: {
                 responsive: false,
+                animation: { duration: 400 },
                 plugins: { legend: { display: false } },
                 scales: { x: { display: false }, y: { display: false } }
             }
         });
     }
 
+    function calculatePNL() {
+        return state.positions.reduce((acc, p) => {
+            const mark = prices[p.sym] || p.entry;
+            // Realistic Market Jitter (±0.05% fluctuation)
+            const volatility = (Math.random() - 0.5) * 0.0005; 
+            const adjustedMark = mark * (1 + volatility);
+            
+            const diff = p.side === 'long' ? (adjustedMark - p.entry) * p.qty : (p.entry - adjustedMark) * p.qty;
+            return acc + diff;
+        }, 0);
+    }
+
     function updateSparkline() {
         if (!pnlChart) return;
         const currentEquity = state.wallet + calculatePNL();
         sparkData.push(currentEquity);
-        if (sparkData.length > 20) sparkData.shift();
+        if (sparkData.length > 30) sparkData.shift();
+        
         pnlChart.data.datasets[0].data = sparkData;
         pnlChart.data.labels = new Array(sparkData.length).fill('');
+        
+        // Dynamic color change based on trend
+        const isUp = sparkData[sparkData.length-1] > sparkData[0];
+        pnlChart.data.datasets[0].borderColor = isUp ? '#0ecb81' : '#f6465d';
+        
         pnlChart.update('none');
-    }
-
-    function calculatePNL() {
-        return state.positions.reduce((acc, p) => {
-            const mark = prices[p.sym] || p.entry;
-            const jitter = (Math.random() - 0.5) * 2; // Smooth number jitter
-            const diff = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
-            return acc + diff + jitter;
-        }, 0);
     }
 
     function setPair(symbol) {
@@ -269,9 +284,8 @@
         const row = document.getElementById('row-'+symbol);
         if(row) row.classList.add('active');
         
-        const unit = symbol.replace('USDT','');
-        document.getElementById('trade-unit').innerText = unit;
-        document.getElementById('h-pair').innerText = unit + ' / USDT';
+        document.getElementById('trade-unit').innerText = symbol.replace('USDT','');
+        document.getElementById('h-pair').innerText = symbol.replace('USDT','') + ' / USDT';
 
         const container = document.getElementById('tv_frame');
         container.innerHTML = '';
@@ -282,7 +296,8 @@
             "theme": state.theme,
             "style": "1",
             "container_id": "tv_frame",
-            "overrides": { "paneProperties.background": state.theme === 'dark' ? "#030406" : "#ffffff" }
+            "hide_side_toolbar": true,
+            "backgroundColor": "#030406"
         });
         save();
     }
@@ -331,6 +346,12 @@
         document.getElementById('w-pnl').innerText = `${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toLocaleString(undefined, fmt)}`;
         document.getElementById('w-pnl').style.color = pnl >= 0 ? 'var(--pos)' : 'var(--neg)';
         document.getElementById('w-margin').innerText = `$${margin.toLocaleString(undefined, fmt)}`;
+
+        // Global Header % Gain
+        const dailyChange = (pnl / state.wallet) * 100;
+        const hChange = document.getElementById('h-change');
+        hChange.innerText = (dailyChange >= 0 ? '+' : '') + dailyChange.toFixed(2) + '%';
+        hChange.style.color = dailyChange >= 0 ? 'var(--pos)' : 'var(--neg)';
     }
 
     function updateMarketUI(d) {
@@ -343,8 +364,6 @@
         }
         if(d.s === state.active) {
             document.getElementById('mid-price').innerText = parseFloat(d.c).toLocaleString();
-            document.getElementById('h-change').innerText = d.P + '%';
-            document.getElementById('h-change').style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
             document.getElementById('h-vol').innerText = (parseFloat(d.q) / 1000000).toFixed(2) + 'M';
             renderOB(parseFloat(d.c));
         }
@@ -377,37 +396,24 @@
         const qty = parseFloat(document.getElementById('trade-qty').value);
         const price = prices[state.active];
         if(!qty || !price) return;
-
-        const cost = qty * price;
-        const currentMargin = state.positions.reduce((acc, p) => acc + (p.entry * p.qty), 0);
-        
-        if (cost + currentMargin > state.wallet) {
-            addLog(`REJECTED: Insufficient Margin. Needed $${cost.toLocaleString()}`, 'var(--neg)');
-            return;
-        }
-
         state.positions.push({ id: Date.now(), sym: state.active, side, qty, entry: price });
-        const verb = side === 'long' ? 'BUY' : 'SELL';
-        addLog(`MARKET ${verb}: ${qty} ${state.active} @ $${price.toLocaleString()}`);
+        addLog(`MARKET ${side === 'long' ? 'BUY' : 'SELL'}: ${qty} ${state.active} @ $${price.toLocaleString()}`);
         save();
     }
 
     function closePos(id) {
         const pos = state.positions.find(p => p.id === id);
-        if(!pos) return;
         const mark = prices[pos.sym] || pos.entry;
         const pnl = pos.side === 'long' ? (mark - pos.entry) * pos.qty : (pos.entry - mark) * pos.qty;
-        
-        state.wallet += pnl; // Realize the PNL
+        state.wallet += pnl;
         state.positions = state.positions.filter(p => p.id !== id);
-        addLog(`POSITION CLOSED: ${pos.sym} | Net: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`);
+        addLog(`POSITION CLOSED: ${pos.sym} | Net: $${pnl.toFixed(2)}`);
         save();
     }
 
-    function addLog(m, color) {
+    function addLog(m) {
         const l = document.getElementById('trade-log');
-        const c = color || 'var(--text)';
-        if(l) l.innerHTML = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> <span style="color:${c}">${m}</span></div>` + l.innerHTML;
+        if(l) l.innerHTML = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> ${m}</div>` + l.innerHTML;
     }
 
     function showSection(id, el) {
