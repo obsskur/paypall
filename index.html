@@ -2990,7 +2990,7 @@ function switchView(view) {
 
   // Topbar: hide on profile (has its own bar)
   const topbar = document.getElementById('topbar');
-  if(topbar) topbar.style.display = isProfile ? 'none' : '';
+  if(topbar) topbar.style.display = isOverlay ? 'none' : '';
 
   // Nav states
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -4356,6 +4356,7 @@ function submitWithdrawal() {
   // Deduct from balance + update daily used
   portfolio.balances[wdCoin] = Math.max(0, (portfolio.balances[wdCoin]||0) - amt);
   wdDailyUsedUSD += usdVal;
+  updateWDLimitBanner(); // reflect immediately — don't wait for modal close
 
   // Log to history
   const entry = {
