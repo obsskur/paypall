@@ -3,13 +3,16 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Orion Wallet</title>
+<title>Orion Wallet Simulator</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <style>
 
 body{
 margin:0;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+font-family:Segoe UI,Arial;
 background:#0b0d13;
 color:white;
 display:flex;
@@ -26,16 +29,11 @@ border-right:1px solid #23283a;
 .logo{
 font-size:18px;
 font-weight:600;
-margin-bottom:30px;
-}
-
-.menu{
-display:flex;
-flex-direction:column;
-gap:10px;
+margin-bottom:25px;
 }
 
 .menu button{
+width:100%;
 background:none;
 border:none;
 color:#9aa0b5;
@@ -43,6 +41,7 @@ text-align:left;
 padding:10px;
 border-radius:8px;
 cursor:pointer;
+margin-bottom:6px;
 }
 
 .menu button:hover{
@@ -60,7 +59,7 @@ flex-direction:column;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:20px 28px;
+padding:18px 28px;
 border-bottom:1px solid #23283a;
 background:#10131d;
 }
@@ -68,30 +67,19 @@ background:#10131d;
 .balance{
 font-size:28px;
 font-weight:700;
-}
-
-.actions button{
-background:#20263a;
-border:none;
-color:white;
-padding:8px 14px;
-border-radius:8px;
-margin-left:10px;
 cursor:pointer;
 }
 
-.actions button:hover{
-background:#2b324c;
-}
-
 .content{
-padding:28px;
+padding:25px;
+overflow:auto;
 }
 
-.assets{
+.card{
 background:#151a27;
 border-radius:14px;
 padding:20px;
+margin-bottom:20px;
 }
 
 table{
@@ -99,76 +87,80 @@ width:100%;
 border-collapse:collapse;
 }
 
-th{
-text-align:left;
-font-size:13px;
-color:#9aa0b5;
-padding-bottom:12px;
+td,th{
+padding:12px 0;
+border-bottom:1px solid #23283a;
 }
 
-td{
-padding:14px 0;
-border-top:1px solid #23283a;
+button{
+background:#2b324c;
+border:none;
+color:white;
+padding:8px 12px;
+border-radius:6px;
+cursor:pointer;
 }
 
-.coin{
-display:flex;
-align-items:center;
-gap:10px;
-}
+.hidden{display:none;}
 
-.icon{
-width:30px;
-height:30px;
-border-radius:50%;
+.lock{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0b0d13;
 display:flex;
 align-items:center;
 justify-content:center;
-font-weight:bold;
+flex-direction:column;
 }
 
-.btc{background:linear-gradient(140deg,#f7931a,#ffbf66);}
-.eth{background:linear-gradient(140deg,#627eea,#8fa2ff);}
-.sol{background:linear-gradient(140deg,#00ffa3,#00d4ff);}
-
-.positive{color:#2ecc71;}
-.negative{color:#e74c3c;}
+.editable{
+cursor:pointer;
+}
 
 </style>
 </head>
 
 <body>
 
+<div id="lock" class="lock">
+<h2>Unlock Wallet</h2>
+<input type="password" id="pin" placeholder="Enter PIN">
+<button onclick="unlock()">Unlock</button>
+</div>
+
 <div class="sidebar">
+
 <div class="logo">Orion Wallet</div>
 
 <div class="menu">
-<button>Wallet</button>
-<button>Portfolio</button>
-<button>Market</button>
-<button>Transactions</button>
-<button>Security</button>
-<button>Settings</button>
+<button onclick="show('wallet')">Wallet</button>
+<button onclick="show('send')">Send</button>
+<button onclick="show('receive')">Receive</button>
+<button onclick="show('transactions')">Transactions</button>
+<button onclick="show('settings')">Settings</button>
 </div>
+
 </div>
 
 <div class="main">
 
 <div class="topbar">
-<div class="balance" id="portfolio">$0</div>
-
-<div class="actions">
-<button>Send</button>
-<button>Receive</button>
-<button>Swap</button>
-</div>
+<div class="balance" id="portfolio" onclick="editPortfolio()">$0</div>
 </div>
 
 <div class="content">
 
-<div class="assets">
+<div id="wallet">
 
-<h3>Assets</h3>
+<div class="card">
+<h3>Portfolio Chart</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
 
 <table>
 
@@ -177,41 +169,60 @@ font-weight:bold;
 <th>Balance</th>
 <th>Price</th>
 <th>Value</th>
-<th>24h</th>
 </tr>
 
 <tr>
-<td class="coin">
-<div class="icon btc">₿</div>Bitcoin
-</td>
-<td id="btcBal">0.214</td>
-<td id="btcPrice">-</td>
-<td id="btcValue">-</td>
-<td id="btcChange">-</td>
+<td>Bitcoin</td>
+<td class="editable" onclick="editBalance('btc')"><span id="btcBal"></span></td>
+<td id="btcPrice"></td>
+<td id="btcVal"></td>
 </tr>
 
 <tr>
-<td class="coin">
-<div class="icon eth">Ξ</div>Ethereum
-</td>
-<td id="ethBal">2.41</td>
-<td id="ethPrice">-</td>
-<td id="ethValue">-</td>
-<td id="ethChange">-</td>
+<td>Ethereum</td>
+<td class="editable" onclick="editBalance('eth')"><span id="ethBal"></span></td>
+<td id="ethPrice"></td>
+<td id="ethVal"></td>
 </tr>
 
 <tr>
-<td class="coin">
-<div class="icon sol">S</div>Solana
-</td>
-<td id="solBal">18.5</td>
-<td id="solPrice">-</td>
-<td id="solValue">-</td>
-<td id="solChange">-</td>
+<td>Solana</td>
+<td class="editable" onclick="editBalance('sol')"><span id="solBal"></span></td>
+<td id="solPrice"></td>
+<td id="solVal"></td>
 </tr>
 
 </table>
 
+</div>
+</div>
+
+<div id="send" class="hidden">
+<div class="card">
+<h3>Send (Simulation)</h3>
+<button onclick="fakeTx('Sent')">Simulate Send</button>
+</div>
+</div>
+
+<div id="receive" class="hidden">
+<div class="card">
+<h3>Receive</h3>
+<div id="qrcode"></div>
+<p id="address"></p>
+</div>
+</div>
+
+<div id="transactions" class="hidden">
+<div class="card">
+<h3>Transactions</h3>
+<ul id="txlist"></ul>
+</div>
+</div>
+
+<div id="settings" class="hidden">
+<div class="card">
+<button onclick="lock()">Lock Wallet</button>
+</div>
 </div>
 
 </div>
@@ -220,56 +231,137 @@ font-weight:bold;
 
 <script>
 
-async function loadPrices(){
+let balances={
+btc:localStorage.btc||0.214,
+eth:localStorage.eth||2.41,
+sol:localStorage.sol||18.5
+};
 
-let url="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true";
+let prices={};
+let chart;
 
-let res=await fetch(url);
-let data=await res.json();
+function unlock(){
+if(document.getElementById("pin").value==="1234"){
+document.getElementById("lock").style.display="none";
+}
+}
 
-let btc=data.bitcoin.usd;
-let eth=data.ethereum.usd;
-let sol=data.solana.usd;
+function lock(){
+document.getElementById("lock").style.display="flex";
+}
 
-let btcBal=0.214;
-let ethBal=2.41;
-let solBal=18.5;
+function show(id){
+document.querySelectorAll(".content > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+}
 
-let btcVal=btcBal*btc;
-let ethVal=ethBal*eth;
-let solVal=solBal*sol;
+function fakeTx(type){
+let li=document.createElement("li");
+li.innerText=type+" at "+new Date().toLocaleString();
+document.getElementById("txlist").appendChild(li);
+}
 
-document.getElementById("btcPrice").innerText="$"+btc.toLocaleString();
-document.getElementById("ethPrice").innerText="$"+eth.toLocaleString();
-document.getElementById("solPrice").innerText="$"+sol.toLocaleString();
+function editBalance(asset){
 
-document.getElementById("btcValue").innerText="$"+btcVal.toLocaleString();
-document.getElementById("ethValue").innerText="$"+ethVal.toLocaleString();
-document.getElementById("solValue").innerText="$"+solVal.toLocaleString();
+let v=prompt("Enter new balance:");
 
-let btcChange=data.bitcoin.usd_24h_change.toFixed(2);
-let ethChange=data.ethereum.usd_24h_change.toFixed(2);
-let solChange=data.solana.usd_24h_change.toFixed(2);
-
-let btcEl=document.getElementById("btcChange");
-btcEl.innerText=btcChange+"%";
-btcEl.className=btcChange>0?"positive":"negative";
-
-let ethEl=document.getElementById("ethChange");
-ethEl.innerText=ethChange+"%";
-ethEl.className=ethChange>0?"positive":"negative";
-
-let solEl=document.getElementById("solChange");
-solEl.innerText=solChange+"%";
-solEl.className=solChange>0?"positive":"negative";
-
-let total=btcVal+ethVal+solVal;
-
-document.getElementById("portfolio").innerText="$"+total.toLocaleString();
+if(v!==null){
+balances[asset]=parseFloat(v);
+localStorage[asset]=v;
+updateValues();
+}
 
 }
 
+function editPortfolio(){
+
+let v=prompt("Enter new portfolio value (USD):");
+
+if(!v) return;
+
+let total=parseFloat(v);
+
+let sum=prices.btc*balances.btc+prices.eth*balances.eth+prices.sol*balances.sol;
+
+let ratio=total/sum;
+
+balances.btc*=ratio;
+balances.eth*=ratio;
+balances.sol*=ratio;
+
+updateValues();
+
+}
+
+function updateValues(){
+
+document.getElementById("btcBal").innerText=balances.btc;
+document.getElementById("ethBal").innerText=balances.eth;
+document.getElementById("solBal").innerText=balances.sol;
+
+let btcVal=balances.btc*prices.btc;
+let ethVal=balances.eth*prices.eth;
+let solVal=balances.sol*prices.sol;
+
+document.getElementById("btcVal").innerText="$"+btcVal.toFixed(2);
+document.getElementById("ethVal").innerText="$"+ethVal.toFixed(2);
+document.getElementById("solVal").innerText="$"+solVal.toFixed(2);
+
+let total=btcVal+ethVal+solVal;
+
+document.getElementById("portfolio").innerText="$"+total.toFixed(2);
+
+chart.data.datasets[0].data=[btcVal,ethVal,solVal];
+chart.update();
+
+}
+
+async function loadPrices(){
+
+let r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd");
+let d=await r.json();
+
+prices.btc=d.bitcoin.usd;
+prices.eth=d.ethereum.usd;
+prices.sol=d.solana.usd;
+
+document.getElementById("btcPrice").innerText="$"+prices.btc;
+document.getElementById("ethPrice").innerText="$"+prices.eth;
+document.getElementById("solPrice").innerText="$"+prices.sol;
+
+updateValues();
+
+}
+
+function initChart(){
+
+chart=new Chart(document.getElementById("chart"),{
+type:"doughnut",
+data:{
+labels:["BTC","ETH","SOL"],
+datasets:[{data:[1,1,1]}]
+}
+});
+
+}
+
+function genAddress(){
+
+let addr="bc1q"+Math.random().toString(36).substring(2,18);
+
+document.getElementById("address").innerText=addr;
+
+QRCode.toCanvas(addr,{width:180},function(err,canvas){
+document.getElementById("qrcode").appendChild(canvas);
+});
+
+}
+
+initChart();
+genAddress();
 loadPrices();
+
+setInterval(loadPrices,30000);
 
 </script>
 
