@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orion Exchange — Pro Tradin</title>
+<title>Orion Exchange — Pro Trading</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <style>
 :root {
   --bg0: #080a0e;
+  --gold: #f0b429;
   --bg1: #0d1117;
   --bg2: #141920;
   --bg3: #1c2330;
@@ -145,20 +146,10 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   grid-column:3/4; grid-row:2/3;
   background:var(--bg1); display:flex; flex-direction:column; overflow:hidden;
 }
-.chart-toolbar {
-  display:flex; align-items:center; gap:2px;
-  padding:8px 12px; border-bottom:1px solid var(--border);
-}
-.tf-btn {
-  padding:3px 8px; border-radius:4px; border:none; background:transparent;
-  color:var(--text1); font-size:11px; font-weight:500; cursor:pointer; transition:all .1s;
-}
-.tf-btn:hover { color:var(--text0); }
-.tf-btn.active { background:var(--bg3); color:var(--accent); }
-.chart-sep { width:1px; height:16px; background:var(--border); margin:0 6px; }
 .ind-btn { padding:3px 8px; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--text1); font-size:11px; cursor:pointer; transition:all .1s; }
 .ind-btn:hover { border-color:var(--border2); color:var(--text0); }
-#tv-container { flex:1; }
+#tv-container { flex:1; width:100%; height:100%; }
+#chart-panel { display:flex; flex-direction:column; overflow:hidden; }
 
 /* ───────── ORDER BOOK ───────── */
 #ob-panel {
@@ -418,22 +409,6 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 
   <!-- CHART PANEL -->
   <main id="chart-panel">
-    <div class="chart-toolbar">
-      <span style="font-size:11px; color:var(--text1); margin-right:6px; font-weight:600;" id="chart-pair-label">BTC/USDT</span>
-      <div class="chart-sep"></div>
-      <button class="tf-btn" onclick="setTF(this,'1')">1m</button>
-      <button class="tf-btn" onclick="setTF(this,'5')">5m</button>
-      <button class="tf-btn" onclick="setTF(this,'15')">15m</button>
-      <button class="tf-btn active" onclick="setTF(this,'60')">1H</button>
-      <button class="tf-btn" onclick="setTF(this,'240')">4H</button>
-      <button class="tf-btn" onclick="setTF(this,'D')">1D</button>
-      <button class="tf-btn" onclick="setTF(this,'W')">1W</button>
-      <div class="chart-sep"></div>
-      <button class="ind-btn" onclick="showToast('info','Indicators','Opening indicator library...')">Indicators</button>
-      <button class="ind-btn" onclick="showToast('info','Templates','Loading chart templates...')">Templates</button>
-      <div style="flex:1"></div>
-      <button class="ind-btn">⤢</button>
-    </div>
     <div id="tv-container"></div>
   </main>
 
@@ -464,21 +439,46 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   <!-- POSITIONS -->
   <section id="pos-panel">
     <div class="pos-tabs">
-      <div class="pos-tab active" onclick="switchPosTab(this,'open')">Open Orders <span class="badge" id="open-count">4</span></div>
-      <div class="pos-tab" onclick="switchPosTab(this,'pos')">Positions <span class="badge" id="pos-count">4</span></div>
-      <div class="pos-tab" onclick="switchPosTab(this,'hist')">Trade History</div>
+      <div class="pos-tab active" onclick="switchPosTab(this,'positions')">Positions <span class="badge" id="pos-count">3</span></div>
+      <div class="pos-tab" onclick="switchPosTab(this,'open-orders')">Open Orders <span class="badge" id="open-count">0</span></div>
+      <div class="pos-tab" onclick="switchPosTab(this,'history')">Trade History</div>
       <div class="pos-tab" onclick="switchPosTab(this,'funds')">Funds</div>
     </div>
     <div class="pos-pnl-bar">
       <div class="pnl-item"><span class="pnl-label">Unrealized PNL:</span><span class="pnl-val" id="upnl">+$0.00</span></div>
       <div class="pnl-item"><span class="pnl-label">Realized PNL:</span><span class="pnl-val" id="rpnl" style="color:var(--pos)">+$841.20</span></div>
-      <div class="pnl-item" style="margin-left:auto;"><span class="pnl-label">Margin Ratio:</span><span class="pnl-val" id="mratio">2.34%</span></div>
+      <div class="pnl-item" style="margin-left:auto;"><span class="pnl-label">Maint. Margin:</span><span class="pnl-val" id="mratio">—</span></div>
     </div>
     <div id="pos-scroll">
-      <table class="data-table" id="pos-table-el">
-        <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry Price</th><th>Mark Price</th><th>Liq. Price</th><th>PNL(ROE%)</th><th>Margin</th><th>Action</th></tr></thead>
-        <tbody id="pos-tbody"></tbody>
-      </table>
+      <!-- POSITIONS TAB -->
+      <div id="tab-positions">
+        <table class="data-table">
+          <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq. Price</th><th>PNL (ROE%)</th><th>Margin</th><th></th></tr></thead>
+          <tbody id="pos-tbody"></tbody>
+        </table>
+      </div>
+      <!-- OPEN ORDERS TAB -->
+      <div id="tab-open-orders" style="display:none;">
+        <table class="data-table">
+          <thead><tr><th>Time</th><th>Symbol</th><th>Type</th><th>Side</th><th>Price</th><th>Amount</th><th>Filled</th><th>Status</th><th></th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+        <div id="orders-empty" style="padding:24px; text-align:center; color:var(--text2); font-size:12px;">No open orders</div>
+      </div>
+      <!-- TRADE HISTORY TAB -->
+      <div id="tab-history" style="display:none;">
+        <table class="data-table">
+          <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th><th>Total</th><th>Fee</th><th>Status</th></tr></thead>
+          <tbody id="hist-tbody"></tbody>
+        </table>
+      </div>
+      <!-- FUNDS TAB -->
+      <div id="tab-funds" style="display:none;">
+        <table class="data-table">
+          <thead><tr><th>Asset</th><th>Available</th><th>In Order</th><th>Total</th><th>Est. Value (USDT)</th></tr></thead>
+          <tbody id="funds-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -492,15 +492,30 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
       <div class="order-type-select">
         <div class="ots active" onclick="setOT(this,'limit')">Limit</div>
         <div class="ots" onclick="setOT(this,'market')">Market</div>
-        <div class="ots" onclick="setOT(this,'stop')">Stop</div>
+        <div class="ots" onclick="setOT(this,'stop-limit')">Stop-Limit</div>
       </div>
-      <div class="field-group">
-        <span class="field-label">Price (USDT)</span>
+
+      <!-- Stop trigger price (only for stop-limit) -->
+      <div class="field-group" id="fg-trigger" style="display:none;">
+        <span class="field-label">Trigger Price</span>
         <div class="field-input-wrap">
-          <input type="number" id="f-price" placeholder="0.00" step="0.01">
+          <input type="number" id="f-trigger" placeholder="0.00" step="0.01">
           <span class="field-unit">USDT</span>
         </div>
       </div>
+
+      <!-- Limit price (hidden for market) -->
+      <div class="field-group" id="fg-price">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span class="field-label">Price</span>
+          <span style="font-size:9px; color:var(--text2); font-family:var(--mono);" id="price-hint">Limit</span>
+        </div>
+        <div class="field-input-wrap">
+          <input type="number" id="f-price" placeholder="0.00" step="0.01" oninput="calcTotal()">
+          <span class="field-unit">USDT</span>
+        </div>
+      </div>
+
       <div class="field-group">
         <span class="field-label">Amount</span>
         <div class="field-input-wrap">
@@ -521,13 +536,15 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
           <span class="field-unit">USDT</span>
         </div>
       </div>
+
       <div class="avail-row">
         <span class="avail-label">Available</span>
         <span class="avail-val" id="avail-usdt">$2,377.17 USDT</span>
       </div>
-      <div class="order-summary" id="order-summary">
+      <div class="order-summary">
         <div class="os-row"><span class="os-key">Est. Fee (0.1%)</span><span class="os-val" id="os-fee">—</span></div>
         <div class="os-row"><span class="os-key">Order Value</span><span class="os-val" id="os-val">—</span></div>
+        <div class="os-row" id="os-slippage-row" style="display:none;"><span class="os-key">Est. Slippage</span><span class="os-val" id="os-slippage" style="color:var(--neg)">~0.05%</span></div>
       </div>
       <button class="execute-btn buy" id="exec-btn" onclick="executeOrder()">Buy BTC</button>
     </div>
@@ -804,8 +821,7 @@ function initTradingView() {
 }
 
 function setTF(btn, tf) {
-  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  // Chart toolbar removed — TradingView widget handles timeframes natively
   currentTF = tf;
 }
 
@@ -975,6 +991,21 @@ function engineLoop() {
     </tr>`;
   });
   if(tbody) tbody.innerHTML = html;
+
+  // Check stop-limit triggers
+  (portfolio.pendingOrders||[]).forEach(o => {
+    if(o.type==='Stop-Limit' && !o.triggered) {
+      const mark = prices[o.sym] || 0;
+      const triggered = (o.side==='buy' && mark >= o.triggerPrice) || (o.side==='sell' && mark <= o.triggerPrice);
+      if(triggered) {
+        o.triggered = true;
+        // Convert to limit order
+        setTimeout(() => fillLimitOrder(o.id), 200 + Math.random()*600);
+        showToast('info','Stop Triggered',`${o.sym} stop @ $${o.triggerPrice.toFixed(2)} — placing limit`);
+      }
+    }
+  });
+
   const upnlEl = document.getElementById('upnl');
   if(upnlEl){ upnlEl.textContent=(upnl>=0?'+':'')+'$'+Math.abs(upnl).toFixed(2); upnlEl.style.color=upnl>=0?'var(--pos)':'var(--neg)'; }
   const wUpnl = document.getElementById('w-upnl');
@@ -993,8 +1024,8 @@ function engineLoop() {
 
 // ─── POSITIONS ────────────────────────────────────────────────────────────
 function renderPositions() {
-  document.getElementById('open-count').textContent = portfolio.positions.length;
   document.getElementById('pos-count').textContent = portfolio.positions.length;
+  document.getElementById('open-count').textContent = (portfolio.pendingOrders||[]).length;
 }
 
 function closePos(id) {
@@ -1002,9 +1033,16 @@ function closePos(id) {
   if(!pos) return;
   const mark = prices[pos.sym] || pos.entry;
   const diff = pos.side==='long'?(mark-pos.entry)*pos.qty:(pos.entry-mark)*pos.qty;
+  portfolio.balances.USDT += (pos.entry * pos.qty) + diff; // return margin + PNL
   portfolio.positions = portfolio.positions.filter(p=>p.id!==id);
+  const now = new Date().toLocaleString('en-GB',{hour12:false}).replace(',','');
+  const closeSide = pos.side==='long' ? 'sell' : 'buy';
+  const fee = mark * pos.qty * 0.001;
+  portfolio.history.unshift({ date:now, pair:pos.sym, side:closeSide, price:mark, qty:pos.qty, fee, status:'Closed' });
   renderPositions();
   showToast(diff>=0?'buy':'sell', 'Position Closed', `${pos.sym} ${pos.side.toUpperCase()} — PNL: ${diff>=0?'+':''}$${Math.abs(diff).toFixed(2)}`);
+  if(currentPosTab==='history') renderHistoryTab();
+  if(currentPosTab==='funds') renderFundsTab();
 }
 
 // ─── ORDER EXECUTION ──────────────────────────────────────────────────────
@@ -1022,9 +1060,40 @@ function setOT(el, type) {
   orderType = type;
   document.querySelectorAll('.ots').forEach(e=>e.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('f-price').disabled = type==='market';
-  document.getElementById('f-price').style.opacity = type==='market'?'0.4':'1';
-  if(type==='market') document.getElementById('f-price').placeholder = 'Market Price';
+
+  const fgPrice = document.getElementById('fg-price');
+  const fgTrigger = document.getElementById('fg-trigger');
+  const priceHint = document.getElementById('price-hint');
+  const slippageRow = document.getElementById('os-slippage-row');
+  const priceInput = document.getElementById('f-price');
+
+  if(type === 'market') {
+    fgPrice.style.display = 'none';
+    fgTrigger.style.display = 'none';
+    slippageRow.style.display = '';
+    priceInput.disabled = true;
+  } else if(type === 'stop-limit') {
+    fgPrice.style.display = '';
+    fgTrigger.style.display = '';
+    slippageRow.style.display = 'none';
+    priceInput.disabled = false;
+    if(priceHint) priceHint.textContent = 'Limit';
+    // Pre-fill trigger slightly above/below current price
+    const mid = prices[activePair] || 0;
+    const triggerEl = document.getElementById('f-trigger');
+    if(triggerEl && mid > 0) {
+      triggerEl.value = orderSide==='buy' ? (mid * 1.005).toFixed(2) : (mid * 0.995).toFixed(2);
+    }
+  } else {
+    // Limit
+    fgPrice.style.display = '';
+    fgTrigger.style.display = 'none';
+    slippageRow.style.display = 'none';
+    priceInput.disabled = false;
+    if(priceHint) priceHint.textContent = 'Limit';
+    setPriceInForm();
+  }
+  calcTotal();
 }
 
 function setPriceInForm() {
@@ -1059,16 +1128,84 @@ function setPct(pct) {
 
 function executeOrder() {
   const qty = parseFloat(document.getElementById('f-amount').value);
-  const price = orderType==='market' ? prices[activePair] : parseFloat(document.getElementById('f-price').value);
-  if(!qty||qty<=0){ showToast('info','Validation','Please enter a valid quantity'); return; }
+  if(!qty||qty<=0){ showToast('info','Validation','Enter a valid amount'); return; }
+
   const coin = activePair.replace('USDT','');
-  const side = orderSide==='buy' ? 'long' : 'short';
-  portfolio.positions.push({ id:Date.now(), sym:activePair, side, qty, entry:price });
-  portfolio.balances.USDT -= qty*price*(orderSide==='buy'?1:-1);
-  renderPositions();
+  const now = new Date();
+  const timeStr = now.toLocaleString('en-GB',{hour12:false}).replace(',','');
+
+  if(orderType === 'market') {
+    // Market: fill immediately at current price with small simulated slippage
+    const slippage = (Math.random() * 0.0008 + 0.0001) * (orderSide==='buy' ? 1 : -1);
+    const fillPrice = prices[activePair] * (1 + slippage);
+    const cost = qty * fillPrice;
+    if(orderSide==='buy' && cost > portfolio.balances.USDT) {
+      showToast('sell','Insufficient Funds',`Need $${cost.toFixed(2)}, have $${portfolio.balances.USDT.toFixed(2)}`); return;
+    }
+    const side = orderSide==='buy' ? 'long' : 'short';
+    portfolio.positions.push({ id:Date.now(), sym:activePair, side, qty, entry:fillPrice });
+    if(orderSide==='buy') portfolio.balances.USDT -= cost;
+    else portfolio.balances[coin] = (portfolio.balances[coin]||0) - qty;
+    const fee = cost * 0.001;
+    portfolio.history.unshift({ date:timeStr, pair:activePair, side:orderSide, price:fillPrice, qty, fee, status:'Filled' });
+    renderPositions();
+    showToast(orderSide, 'Market Order Filled', `${orderSide.toUpperCase()} ${qty} ${coin} @ $${fillPrice.toLocaleString(undefined,{minimumFractionDigits:2})}`);
+
+  } else if(orderType === 'limit') {
+    const price = parseFloat(document.getElementById('f-price').value);
+    if(!price||price<=0){ showToast('info','Validation','Enter a limit price'); return; }
+    const cost = qty * price;
+    if(orderSide==='buy' && cost > portfolio.balances.USDT) {
+      showToast('sell','Insufficient Funds',`Need $${cost.toFixed(2)}, have $${portfolio.balances.USDT.toFixed(2)}`); return;
+    }
+    // Reserve funds, add to pending
+    if(orderSide==='buy') portfolio.balances.USDT -= cost; // reserve
+    const order = { id:Date.now(), sym:activePair, side:orderSide, type:'Limit', price, qty, time:timeStr };
+    portfolio.pendingOrders = portfolio.pendingOrders || [];
+    portfolio.pendingOrders.push(order);
+    // Check if limit fills immediately (price already crossed)
+    const mark = prices[activePair];
+    const fillsNow = (orderSide==='buy' && price >= mark) || (orderSide==='sell' && price <= mark);
+    if(fillsNow) {
+      setTimeout(() => fillLimitOrder(order.id), 300 + Math.random()*700);
+    }
+    showToast(orderSide, 'Limit Order Placed', `${orderSide.toUpperCase()} ${qty} ${coin} @ $${price.toLocaleString(undefined,{minimumFractionDigits:2})}`);
+    if(currentPosTab === 'open-orders') renderOpenOrdersTab();
+    document.getElementById('open-count').textContent = (portfolio.pendingOrders||[]).length;
+
+  } else if(orderType === 'stop-limit') {
+    const triggerPrice = parseFloat(document.getElementById('f-trigger').value);
+    const limitPrice = parseFloat(document.getElementById('f-price').value);
+    if(!triggerPrice||!limitPrice){ showToast('info','Validation','Enter trigger and limit price'); return; }
+    const order = { id:Date.now(), sym:activePair, side:orderSide, type:'Stop-Limit', triggerPrice, price:limitPrice, qty, time:timeStr, triggered:false };
+    portfolio.pendingOrders = portfolio.pendingOrders || [];
+    portfolio.pendingOrders.push(order);
+    showToast('info', 'Stop-Limit Placed', `Triggers @ $${triggerPrice.toFixed(2)}, fills @ $${limitPrice.toFixed(2)}`);
+    if(currentPosTab === 'open-orders') renderOpenOrdersTab();
+    document.getElementById('open-count').textContent = (portfolio.pendingOrders||[]).length;
+  }
+
   document.getElementById('f-amount').value='';
   document.getElementById('f-total').value='';
-  showToast(orderSide, 'Order Filled', `${orderSide.toUpperCase()} ${qty} ${coin} @ $${price.toLocaleString()}`);
+  document.getElementById('os-fee').textContent='—';
+  document.getElementById('os-val').textContent='—';
+}
+
+function fillLimitOrder(id) {
+  const orders = portfolio.pendingOrders || [];
+  const order = orders.find(o=>o.id===id);
+  if(!order) return;
+  portfolio.pendingOrders = orders.filter(o=>o.id!==id);
+  const coin = order.sym.replace('USDT','');
+  const side = order.side==='buy' ? 'long' : 'short';
+  portfolio.positions.push({ id:Date.now(), sym:order.sym, side, qty:order.qty, entry:order.price });
+  if(order.side==='sell') portfolio.balances.USDT += order.qty * order.price;
+  const fee = order.qty * order.price * 0.001;
+  const now = new Date().toLocaleString('en-GB',{hour12:false}).replace(',','');
+  portfolio.history.unshift({ date:now, pair:order.sym, side:order.side, price:order.price, qty:order.qty, fee, status:'Filled' });
+  renderPositions();
+  showToast(order.side, 'Limit Order Filled', `${order.side.toUpperCase()} ${order.qty} ${coin} @ $${order.price.toFixed(2)}`);
+  if(currentPosTab === 'open-orders') renderOpenOrdersTab();
 }
 
 // ─── WALLET VIEW ──────────────────────────────────────────────────────────
@@ -1195,9 +1332,90 @@ function switchView(view) {
 }
 
 // ─── MISC ────────────────────────────────────────────────────────────────
+let currentPosTab = 'positions';
+
 function switchPosTab(el, tab) {
   document.querySelectorAll('.pos-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  currentPosTab = tab;
+  // Hide all tab content
+  ['positions','open-orders','history','funds'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if(el) el.style.display = 'none';
+  });
+  const active = document.getElementById('tab-'+tab);
+  if(active) active.style.display = '';
+  // Render content for the tab
+  if(tab === 'history') renderHistoryTab();
+  if(tab === 'funds') renderFundsTab();
+  if(tab === 'open-orders') renderOpenOrdersTab();
+}
+
+function renderHistoryTab() {
+  const tbody = document.getElementById('hist-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = portfolio.history.map(t => {
+    const total = t.price * t.qty;
+    return `<tr>
+      <td>${t.date}</td>
+      <td style="font-weight:600">${t.pair.replace('USDT','')+'/USDT'}</td>
+      <td style="color:${t.side==='buy'?'var(--pos)':'var(--neg)'}">${t.side==='buy'?'BUY':'SELL'}</td>
+      <td style="font-family:var(--mono);">$${t.price.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="font-family:var(--mono);">${t.qty}</td>
+      <td style="font-family:var(--mono);">$${total.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="font-family:var(--mono); color:var(--text1);">$${t.fee.toFixed(4)}</td>
+      <td style="color:var(--pos);">${t.status}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center; color:var(--text2); padding:20px;">No trade history</td></tr>';
+}
+
+function renderFundsTab() {
+  const tbody = document.getElementById('funds-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = Object.entries(portfolio.balances).map(([coin, amt]) => {
+    const price = prices[coin+'USDT'] || (coin==='USDT' ? 1 : 0);
+    const val = amt * price;
+    const color = COIN_COLORS[coin] || '#888';
+    const inOrder = 0; // In a real exchange this would track reserved amounts
+    return `<tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:20px; height:20px; border-radius:50%; background:${color}22; color:${color}; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">${COIN_LABELS[coin]||coin[0]}</div>
+          <span style="font-weight:600;">${coin}</span>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);">${amt.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+      <td style="font-family:var(--mono); color:var(--text2);">${inOrder.toFixed(8)}</td>
+      <td style="font-family:var(--mono);">${amt.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+      <td style="font-family:var(--mono);">≈ $${val.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderOpenOrdersTab() {
+  const tbody = document.getElementById('orders-tbody');
+  const empty = document.getElementById('orders-empty');
+  if(!tbody) return;
+  const pending = portfolio.pendingOrders || [];
+  tbody.innerHTML = pending.map(o => `<tr>
+    <td>${o.time}</td>
+    <td style="font-weight:600">${o.sym.replace('USDT','')+'/USDT'}</td>
+    <td style="color:var(--text1);">${o.type}</td>
+    <td style="color:${o.side==='buy'?'var(--pos)':'var(--neg)'}">${o.side.toUpperCase()}</td>
+    <td style="font-family:var(--mono);">$${o.price.toFixed(2)}</td>
+    <td style="font-family:var(--mono);">${o.qty}</td>
+    <td style="font-family:var(--mono); color:var(--text2);">0.0000</td>
+    <td style="color:var(--gold, #f0b429);">Pending</td>
+    <td><button class="close-btn" onclick="cancelOrder(${o.id})">Cancel</button></td>
+  </tr>`).join('');
+  if(empty) empty.style.display = pending.length === 0 ? '' : 'none';
+  document.getElementById('open-count').textContent = pending.length;
+}
+
+function cancelOrder(id) {
+  portfolio.pendingOrders = (portfolio.pendingOrders||[]).filter(o=>o.id!==id);
+  renderOpenOrdersTab();
+  showToast('info','Order Cancelled','Limit order removed from book');
 }
 
 function showToast(type, title, sub) {
