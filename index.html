@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORION // SOVEREIGN V10.0</title>
+    <title>ORION // SOVEREIGN V10.0 PRO</title>
     
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -33,7 +33,6 @@
         .panel { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
         .panel-h { padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 10px; font-weight: 800; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Orderbook Styles */
         .ob-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 1px 12px; font-family: var(--font-mono); font-size: 10px; position: relative; }
         .ob-fill { position: absolute; right: 0; height: 100%; opacity: 0.12; transition: width 0.3s; pointer-events: none; }
 
@@ -62,12 +61,12 @@
         <button class="nav-item" onclick="showSection('wallet', this)"><i data-lucide="wallet"></i></button>
         <button class="nav-item" onclick="showSection('security', this)"><i data-lucide="shield"></i></button>
         <div style="flex:1"></div>
-        <button class="nav-item"><i data-lucide="settings"></i></button>
+        <button class="nav-item" onclick="toggleTheme()"><i data-lucide="sun"></i></button>
     </nav>
 
     <div class="viewport">
         <header>
-            <div style="font-weight:900; color:var(--accent); letter-spacing:1px;">ORION V10</div>
+            <div style="font-weight:900; color:var(--accent); letter-spacing:1px;">ORION PRO</div>
             <div id="h-pair" style="font-family:var(--font-mono); font-weight:700">BTC/USDT</div>
             <div style="display:flex; gap:15px; color:var(--dim)">
                 <span>24h Change <b id="h-change" style="color:var(--pos)">+0.00%</b></span>
@@ -80,7 +79,7 @@
         <section id="view-trade" class="view-section active">
             <div class="trade-grid">
                 <div class="panel">
-                    <div class="panel-h">Markets</div>
+                    <div class="panel-h">Market Selection</div>
                     <div id="market-list" style="overflow-y:auto; flex: 1;"></div>
                 </div>
 
@@ -89,14 +88,14 @@
                 </div>
 
                 <div class="panel" style="border-left:1px solid var(--border)">
-                    <div class="panel-h">Order Book</div>
+                    <div class="panel-h">Order Book (Real-time)</div>
                     <div id="asks" style="display:flex; flex-direction:column-reverse; flex:1; overflow:hidden"></div>
                     <div id="mid-price" style="padding:10px; text-align:center; font-family:var(--font-mono); font-size:16px; font-weight:800; background:var(--sub); border-top:1px solid var(--border); border-bottom:1px solid var(--border)">0.00</div>
                     <div id="bids" style="flex:1; overflow:hidden"></div>
                     
                     <div class="exec-bar">
                         <div style="background:var(--bg); padding:8px; border-radius:4px; display:flex; border: 1px solid var(--border)">
-                            <input type="number" id="trade-qty" placeholder="0.00" style="background:transparent; border:none; color:#fff; flex:1; font-family:var(--font-mono); font-size:12px;">
+                            <input type="number" id="trade-qty" placeholder="Quantity" style="background:transparent; border:none; color:#fff; flex:1; font-family:var(--font-mono); font-size:12px;">
                             <span id="trade-unit" style="font-size:9px; font-weight:900; align-self:center; color:var(--dim)">BTC</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
@@ -107,7 +106,7 @@
                 </div>
 
                 <div class="panel" style="grid-column: 1/3; border-top:1px solid var(--border)">
-                    <div class="panel-h">Positions</div>
+                    <div class="panel-h">Active Positions</div>
                     <div style="overflow-y:auto; flex:1">
                         <table>
                             <thead><tr><th>Pair</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>PNL</th><th>Action</th></tr></thead>
@@ -117,20 +116,20 @@
                 </div>
 
                 <div class="panel" style="border-top:1px solid var(--border); border-left:1px solid var(--border)">
-                    <div class="panel-h">Terminal Log</div>
+                    <div class="panel-h">Execution Log</div>
                     <div id="trade-log" style="overflow-y:auto; flex:1; font-size:9px; font-family:var(--font-mono); color:var(--dim); padding:10px;"></div>
                 </div>
             </div>
         </section>
-        
-        </div>
+    </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('orion_v10')) || {
+    let state = JSON.parse(localStorage.getItem('orion_v10_pro')) || {
         wallet: 50000.00,
         positions: [],
         active: 'BTCUSDT',
-        log: []
+        log: [],
+        theme: 'dark'
     };
 
     let prices = {};
@@ -158,42 +157,48 @@
         document.getElementById('trade-unit').innerText = symbol.replace('USDT','');
         document.getElementById('h-pair').innerText = symbol.replace('USDT','') + ' / USDT';
 
-        // Load Advanced TradingView Widget
+        // Advanced Full UI Widget Configuration
         tvWidget = new TradingView.widget({
             "autosize": true,
             "symbol": "BINANCE:" + symbol,
-            "interval": "5",
+            "interval": "D",
             "timezone": "Etc/UTC",
-            "theme": "dark",
+            "theme": state.theme,
             "style": "1",
             "locale": "en",
-            "toolbar_bg": "#0a0c10",
+            "toolbar_bg": state.theme === 'dark' ? "#0a0c10" : "#f1f3f6",
             "enable_publishing": false,
-            "hide_top_toolbar": false, // Show timeframe/tool controls
-            "hide_legend": false,
             "withdateranges": true,
+            "hide_side_toolbar": false, // Drawing tools enabled
+            "allow_symbol_change": true,
             "save_image": true,
+            "details": true,
+            "hotlist": true,
+            "calendar": true,
+            "show_popup_button": true,
+            "popup_width": "1000",
+            "popup_height": "650",
             "container_id": "tv_frame",
-            "drawings_access": { type: 'all', tools: [{ name: "Regression Trend" }] },
             "enabled_features": [
                 "study_templates",
                 "use_localstorage_for_settings_screens",
-                "side_toolbar_in_fullscreen_mode",
-                "header_saveload"
+                "header_saveload",
+                "header_settings",
+                "header_indicators",
+                "header_compare",
+                "header_undo_redo",
+                "header_screenshot",
+                "header_fullscreen_button"
             ],
-            "disabled_features": ["header_symbol_search"], // Customizing search
             "overrides": {
-                "paneProperties.background": "#030406",
-                "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.02)",
-                "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.02)",
-                "symbolWatermarkProperties.transparency": 90,
-                "scalesProperties.textColor": "#707a8a"
+                "paneProperties.background": state.theme === 'dark' ? "#030406" : "#ffffff",
+                "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.05)",
+                "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.05)"
             }
         });
         save();
     }
 
-    // --- Core Systems ---
     function startWS() {
         const stream = assets.map(a => a.toLowerCase() + '@ticker').join('/');
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}`);
@@ -205,16 +210,12 @@
     }
 
     function engine() {
-        let upnl = 0;
         const tbody = document.getElementById('pos-table');
         if(!tbody) return;
         tbody.innerHTML = '';
-
         state.positions.forEach(p => {
             const mark = prices[p.sym] || p.entry;
             const diff = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
-            upnl += diff;
-
             tbody.innerHTML += `<tr>
                 <td style="font-weight:700">${p.sym}</td>
                 <td style="color:${p.side==='long'?'var(--pos)':'var(--neg)'}">${p.side.toUpperCase()}</td>
@@ -224,18 +225,6 @@
                 <td style="color:${diff>=0?'var(--pos)':'var(--neg)'}">$${diff.toFixed(2)}</td>
                 <td><button onclick="closePos(${p.id})" style="color:var(--dim); background:none; border:none; cursor:pointer; font-size:9px;">CLOSE</button></td>
             </tr>`;
-        });
-    }
-
-    function initMarkets() {
-        const list = document.getElementById('market-list');
-        assets.forEach(a => {
-            const div = document.createElement('div');
-            div.className = `m-row`; 
-            div.id = 'row-'+a;
-            div.onclick = () => setPair(a);
-            div.innerHTML = `<span>${a.replace('USDT','')}</span><div style="text-align:right"><div class="p-val">0.00</div><div class="p-chg" style="font-size:10px; color:var(--dim)">0%</div></div>`;
-            list.appendChild(div);
         });
     }
 
@@ -255,14 +244,26 @@
         }
     }
 
+    function initMarkets() {
+        const list = document.getElementById('market-list');
+        assets.forEach(a => {
+            const div = document.createElement('div');
+            div.className = `m-row`; 
+            div.id = 'row-'+a;
+            div.onclick = () => setPair(a);
+            div.innerHTML = `<span>${a.replace('USDT','')}</span><div style="text-align:right"><div class="p-val">0.00</div><div class="p-chg" style="font-size:10px; color:var(--dim)">0%</div></div>`;
+            list.appendChild(div);
+        });
+    }
+
     function renderOB(p) {
         const ask = document.getElementById('asks'); const bid = document.getElementById('bids');
         if(!ask || !bid) return;
         ask.innerHTML = ''; bid.innerHTML = '';
-        const spread = p * 0.0001;
         for(let i=11; i>=0; i--) {
-            ask.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*70}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p + spread + (i*spread)).toFixed(2)}</span><span style="text-align:right">${(Math.random()*2).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*50).toFixed(1)}K</span></div>`;
-            bid.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*70}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p - spread - (i*spread)).toFixed(2)}</span><span style="text-align:right">${(Math.random()*2).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*50).toFixed(1)}K</span></div>`;
+            const offset = p * 0.0001 * i;
+            ask.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p + offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
+            bid.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p - offset).toFixed(2)}</span><span style="text-align:right">${(Math.random()*1.5).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*20).toFixed(1)}K</span></div>`;
         }
     }
 
@@ -271,20 +272,18 @@
         const price = prices[state.active];
         if(!qty || !price) return;
         state.positions.push({ id: Date.now(), sym: state.active, side, qty, entry: price });
-        addLog(`ORDER FILLED: ${side.toUpperCase()} ${qty} ${state.active} @ ${price}`);
-        save();
-    }
-
-    function closePos(id) {
-        state.positions = state.positions.filter(x => x.id !== id);
-        addLog(`POSITION CLOSED`);
+        addLog(`ORDER FILLED: ${side.toUpperCase()} ${qty} ${state.active}`);
         save();
     }
 
     function addLog(m) {
         const l = document.getElementById('trade-log');
-        const entry = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> ${m}</div>`;
-        l.innerHTML = entry + l.innerHTML;
+        l.innerHTML = `<div><span style="color:var(--accent)">[${new Date().toLocaleTimeString()}]</span> ${m}</div>` + l.innerHTML;
+    }
+
+    function toggleTheme() {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        setPair(state.active);
     }
 
     function showSection(id, el) {
@@ -294,7 +293,7 @@
         el.classList.add('active');
     }
 
-    function save() { localStorage.setItem('orion_v10', JSON.stringify(state)); }
+    function save() { localStorage.setItem('orion_v10_pro', JSON.stringify(state)); }
 </script>
 </body>
 </html>
