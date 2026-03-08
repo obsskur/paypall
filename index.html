@@ -200,22 +200,30 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 #pos-panel {
   grid-column:3/4; grid-row:3/4;
   background:var(--bg1); border-top:1px solid var(--border);
-  display:flex; flex-direction:column; overflow:hidden;
+  display:flex; flex-direction:column;
+  min-height:0; /* critical for flex children to not overflow grid */
+  overflow:hidden;
 }
-.pos-tabs { display:flex; border-bottom:1px solid var(--border); }
-.pos-tab { padding:8px 16px; font-size:11px; font-weight:500; color:var(--text1); cursor:pointer; transition:all .1s; border-bottom:2px solid transparent; }
+.pos-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.pos-tab { padding:6px 14px; font-size:11px; font-weight:500; color:var(--text1); cursor:pointer; transition:all .1s; border-bottom:2px solid transparent; white-space:nowrap; }
 .pos-tab.active { color:var(--text0); border-bottom-color:var(--accent); }
 .pos-tab .badge { display:inline-block; background:var(--accent); color:#000; border-radius:10px; padding:0 5px; font-size:9px; font-weight:700; margin-left:4px; }
-.data-table { width:100%; border-collapse:collapse; }
-.data-table th { padding:6px 12px; text-align:left; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); border-bottom:1px solid var(--border); }
-.data-table td { padding:7px 12px; font-size:11px; font-family:var(--mono); border-bottom:1px solid rgba(255,255,255,0.03); }
+.data-table { width:100%; border-collapse:collapse; min-width:600px; }
+.data-table th { padding:5px 10px; text-align:left; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); border-bottom:1px solid var(--border); white-space:nowrap; }
+.data-table td { padding:5px 10px; font-size:11px; font-family:var(--mono); border-bottom:1px solid rgba(255,255,255,0.03); white-space:nowrap; }
 .data-table tr:hover td { background:var(--bg2); }
 .close-btn { background:none; border:none; color:var(--text2); cursor:pointer; font-size:10px; font-family:var(--sans); font-weight:500; transition:color .1s; }
 .close-btn:hover { color:var(--neg); }
-#pos-scroll { overflow-y:auto; flex:1; }
+#pos-scroll {
+  overflow-y:auto;
+  overflow-x:auto;
+  flex:1;
+  min-height:0; /* must have this for overflow-y:auto to work inside flex */
+}
 .pos-pnl-bar {
-  display:flex; align-items:center; gap:16px; padding:6px 12px;
+  display:flex; align-items:center; gap:12px; padding:4px 12px;
   background:var(--bg0); border-bottom:1px solid var(--border); font-size:11px;
+  flex-shrink:0;
 }
 .pnl-item { display:flex; gap:6px; align-items:center; }
 .pnl-label { color:var(--text2); }
@@ -226,13 +234,14 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   grid-column:4/5; grid-row:3/4;
   background:var(--bg1); border-left:1px solid var(--border); border-top:1px solid var(--border);
   display:flex; flex-direction:column; overflow:hidden;
+  min-height:0;
 }
 .order-type-tabs { display:flex; border-bottom:1px solid var(--border); }
 .ot-tab { flex:1; padding:8px 0; text-align:center; font-size:11px; font-weight:600; cursor:pointer; transition:all .1s; border-bottom:2px solid transparent; }
 .ot-tab.buy.active { color:var(--pos); border-bottom-color:var(--pos); }
 .ot-tab.sell.active { color:var(--neg); border-bottom-color:var(--neg); }
 .ot-tab:not(.active) { color:var(--text1); }
-.order-body { padding:12px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.order-body { padding:10px 12px; display:flex; flex-direction:column; gap:6px; flex:1; overflow-y:auto; min-height:0; }
 .field-group { display:flex; flex-direction:column; gap:4px; }
 .field-label { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; }
 .field-input-wrap { display:flex; align-items:center; background:var(--bg3); border:1px solid var(--border); border-radius:6px; transition:border .15s; }
@@ -666,13 +675,27 @@ function connectTickerWS() {
 }
 
 function connectDepthWS() {
+  // Always seed OB immediately with current prices — upgraded to live if WS connects
+  renderFakeOB();
+  startSimDepth(); // run simulation right away as baseline
   try {
     const dws = new WebSocket(`wss://stream.binance.com:9443/ws/${activePair.toLowerCase()}@depth20@100ms`);
-    dws.onopen = () => { wsDepthAlive = true; if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; } };
-    dws.onmessage = e => { try { const d = JSON.parse(e.data); if(d.b && d.a) renderOrderBook(d.b, d.a); } catch(_){} };
-    dws.onerror = () => { wsDepthAlive = false; startSimDepth(); };
-    dws.onclose = () => { wsDepthAlive = false; startSimDepth(); };
-  } catch(e) { startSimDepth(); }
+    // Give it 3s to connect; if it does, kill simulation and use live data
+    const wsTimer = setTimeout(() => { /* sim stays if WS hasn't opened */ }, 3000);
+    dws.onopen = () => {
+      clearTimeout(wsTimer);
+      wsDepthAlive = true;
+      if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; }
+    };
+    dws.onmessage = e => {
+      try {
+        const d = JSON.parse(e.data);
+        if(d.b && d.a) { renderOrderBook(d.b, d.a); }
+      } catch(_){}
+    };
+    dws.onerror = () => { wsDepthAlive = false; };
+    dws.onclose = () => { wsDepthAlive = false; };
+  } catch(e) { /* sim already running */ }
 }
 
 function startSimPrices() {
@@ -697,8 +720,8 @@ function startSimPrices() {
 }
 
 function startSimDepth() {
-  if(simDepthInterval) return;
-  simDepthInterval = setInterval(() => renderFakeOB(), 500);
+  if(simDepthInterval) clearInterval(simDepthInterval);
+  simDepthInterval = setInterval(() => renderFakeOB(), 600);
 }
 
 function onTickerUpdate(d) {
@@ -750,14 +773,19 @@ function renderOrderBook(bids, asks) {
   }).join('');
 }
 
+const SEED_PRICES = { BTCUSDT:67420, ETHUSDT:3520, SOLUSDT:147, BNBUSDT:612, XRPUSDT:0.54, ADAUSDT:0.47, AVAXUSDT:38.5, DOTUSDT:8.20 };
 function renderFakeOB() {
-  const mid = prices[activePair] || 67000;
+  const mid = prices[activePair] || SEED_PRICES[activePair] || 100;
+  const isSmall = mid < 1;
   const bids = [], asks = [];
   for(let i=0;i<12;i++){
-    const spread = mid*0.0001*(i+1);
-    const qty = (Math.random()*2+0.1).toFixed(4);
-    asks.push([String(mid+spread), qty]);
-    bids.push([String(mid-spread), qty]);
+    const spreadFactor = isSmall ? 0.0003 : 0.00008;
+    const spread = mid * spreadFactor * (i + 1);
+    // Realistic qty: larger for cheap coins
+    const baseQty = isSmall ? (Math.random()*8000+500) : (mid > 10000 ? (Math.random()*0.8+0.05) : (Math.random()*20+1));
+    const qty = baseQty.toFixed(isSmall ? 0 : (mid > 100 ? 3 : 4));
+    asks.push([String((mid + spread).toFixed(isSmall?5:2)), qty]);
+    bids.push([String((mid - spread).toFixed(isSmall?5:2)), qty]);
   }
   renderOrderBook(bids, asks);
 }
@@ -866,10 +894,10 @@ function switchPair(pair) {
   if(tvWidget && typeof tvWidget.setSymbol === 'function') {
     tvWidget.setSymbol('BINANCE:'+pair, currentTF);
   } else { initTradingView(); }
-  // Reconnect depth WS for new pair
+  // Reconnect depth WS for new pair — clear old sim first
   wsDepthAlive = false;
   if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; }
-  connectDepthWS();
+  setTimeout(connectDepthWS, 50); // slight delay to let pair switch settle
 }
 
 // ─── MARKET LIST ──────────────────────────────────────────────────────────
