@@ -506,6 +506,32 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   cursor:pointer; font-family:var(--sans); transition:all .12s;
 }
 .danger-btn:hover { background:rgba(255,77,109,.08); border-color:rgba(255,77,109,.5); }
+
+/* ───────── SESSIONS / ACTIVITY ───────── */
+.session-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,.04);
+}
+.session-icon {
+  width:28px; height:28px; border-radius:6px; background:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text1); flex-shrink:0;
+}
+.session-info { flex:1; min-width:0; }
+.session-device { font-size:12px; font-weight:500; color:var(--text0); }
+.session-meta { font-size:10px; color:var(--text2); margin-top:2px; }
+
+/* Currency picker */
+.currency-option {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 12px; border-radius:6px; cursor:pointer;
+  transition:background .1s; font-size:13px;
+}
+.currency-option:hover { background:var(--bg3); }
+.currency-option.selected { background:rgba(0,212,255,.06); color:var(--accent); }
+.currency-option .cur-code { font-weight:600; font-family:var(--mono); min-width:36px; }
+.currency-option .cur-name { color:var(--text2); font-size:11px; flex:1; padding-left:10px; }
+.currency-option .cur-check { color:var(--accent); font-size:12px; }
 </style>
 </head>
 <body>
@@ -944,9 +970,9 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
         <div class="profile-field" style="border:none">
           <div class="pf-left">
             <div class="pf-label">Display Currency</div>
-            <div class="pf-value">USD — US Dollar</div>
+            <div class="pf-value" id="pf-currency-val">USD — US Dollar</div>
           </div>
-          <button class="pf-action-btn" onclick="openModal('currency')">Change</button>
+          <button class="pf-action-btn" onclick="openCurrencyPicker()">Change</button>
         </div>
       </div>
 
@@ -956,14 +982,74 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
           <span class="profile-section-title">Account Actions</span>
         </div>
         <div class="profile-field" style="border:none; gap:12px; flex-wrap:wrap; padding:14px 18px;">
-          <button class="pf-action-btn" onclick="showToast('info','Session Log','Showing active sessions...')">Active Sessions</button>
-          <button class="pf-action-btn" onclick="showToast('info','Activity Log','Loading account activity...')">Activity Log</button>
+          <button class="pf-action-btn" onclick="openProfilePanel('sessions')">Active Sessions</button>
+          <button class="pf-action-btn" onclick="openProfilePanel('activity')">Activity Log</button>
           <button class="danger-btn" style="margin-left:auto;" onclick="showToast('sell','Close Account','Contact support@orion.trade to proceed')">Close Account</button>
+        </div>
+        <!-- Sessions Panel -->
+        <div id="profile-panel-sessions" style="display:none; border-top:1px solid var(--border);">
+          <div style="padding:14px 16px;">
+            <div style="font-size:11px; color:var(--text2); margin-bottom:12px;">Devices currently signed in to your account</div>
+            <div class="session-row active-session">
+              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+              <div class="session-info">
+                <div class="session-device">Chrome on Windows · <span style="color:var(--pos); font-size:10px;">● Current</span></div>
+                <div class="session-meta">United Kingdom · 82.35.142.xx · Active now</div>
+              </div>
+              <span style="font-size:10px; color:var(--text2); padding:3px 8px; border:1px solid var(--border); border-radius:4px;">This device</span>
+            </div>
+            <div class="session-row">
+              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+              <div class="session-info">
+                <div class="session-device">Safari on iPhone 15</div>
+                <div class="session-meta">United Kingdom · 82.35.142.xx · 3 hours ago</div>
+              </div>
+              <button class="pf-action-btn" style="font-size:10px; color:var(--neg); border-color:rgba(255,77,109,.2);" onclick="revokeSession(this,'iPhone 15')">Revoke</button>
+            </div>
+            <div class="session-row" style="border:none;">
+              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+              <div class="session-info">
+                <div class="session-device">Firefox on macOS</div>
+                <div class="session-meta">Netherlands · 185.220.xx.xx · 2 days ago</div>
+              </div>
+              <button class="pf-action-btn" style="font-size:10px; color:var(--neg); border-color:rgba(255,77,109,.2);" onclick="revokeSession(this,'Firefox on macOS')">Revoke</button>
+            </div>
+          </div>
+        </div>
+        <!-- Activity Panel -->
+        <div id="profile-panel-activity" style="display:none; border-top:1px solid var(--border);">
+          <div style="padding:14px 16px;">
+            <div style="font-size:11px; color:var(--text2); margin-bottom:12px;">Recent account events</div>
+            <table class="data-table" style="font-size:11px;">
+              <thead><tr><th>Time</th><th>Event</th><th>IP Address</th><th>Location</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td style="color:var(--text2);">Today 09:14</td><td>Login</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+                <tr><td style="color:var(--text2);">Today 09:12</td><td>2FA verified</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+                <tr><td style="color:var(--text2);">Yesterday 22:41</td><td>Login</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+                <tr><td style="color:var(--text2);">Yesterday 18:05</td><td>Withdrawal</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Approved</td></tr>
+                <tr><td style="color:var(--text2);">Mar 07 14:20</td><td>API key used</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+                <tr><td style="color:var(--text2);">Mar 06 09:30</td><td>Login</td><td>185.220.xx.xx</td><td>Netherlands</td><td style="color:#f0b429;">Flagged</td></tr>
+                <tr><td style="color:var(--text2);">Mar 05 20:18</td><td>Password changed</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
     </div>
   </section>
+
+  <!-- CURRENCY PICKER -->
+  <div id="currency-picker-overlay" onclick="closeCurrencyPicker(event)" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:100; align-items:center; justify-content:center;">
+    <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:24px; width:340px; max-width:92vw; animation:modalIn .15s ease;">
+      <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Display Currency</div>
+      <div style="font-size:11px; color:var(--text2); margin-bottom:16px;">All portfolio values will be converted at live rates</div>
+      <div id="currency-list" style="display:flex; flex-direction:column; gap:2px;"></div>
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button class="modal-btn-cancel" onclick="closeCurrencyPicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <!-- EDIT MODAL -->
   <div id="profile-modal-overlay" onclick="closeModalOutside(event)">
@@ -1083,13 +1169,15 @@ function connectTickerWS() {
 }
 
 function connectDepthWS() {
-  // Always seed OB immediately with current prices — upgraded to live if WS connects
   renderFakeOB();
-  startSimDepth(); // run simulation right away as baseline
+  startSimDepth();
+  attemptDepthWS();
+}
+
+function attemptDepthWS() {
   try {
     const dws = new WebSocket(`wss://stream.binance.com:9443/ws/${activePair.toLowerCase()}@depth20@100ms`);
-    // Give it 3s to connect; if it does, kill simulation and use live data
-    const wsTimer = setTimeout(() => { /* sim stays if WS hasn't opened */ }, 3000);
+    const wsTimer = setTimeout(() => { /* sim stays running */ }, 3000);
     dws.onopen = () => {
       clearTimeout(wsTimer);
       wsDepthAlive = true;
@@ -1101,9 +1189,9 @@ function connectDepthWS() {
         if(d.b && d.a) { renderOrderBook(d.b, d.a); }
       } catch(_){}
     };
-    dws.onerror = () => { wsDepthAlive = false; };
-    dws.onclose = () => { wsDepthAlive = false; };
-  } catch(e) { /* sim already running */ }
+    dws.onerror = () => { wsDepthAlive = false; /* sim keeps running */ };
+    dws.onclose = () => { wsDepthAlive = false; /* sim keeps running */ };
+  } catch(e) { /* sim already running, no WS available */ }
 }
 
 function startSimPrices() {
@@ -1115,13 +1203,14 @@ function startSimPrices() {
       updateMarketRowById(p);
       if(p === activePair){
         const price = prices[p];
-        document.getElementById('ob-mid').textContent = price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+        const midEl=document.getElementById('ob-mid'); if(midEl) midEl.textContent=price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
         document.getElementById('stat-high').textContent = '$'+(price*1.012).toLocaleString(undefined,{minimumFractionDigits:2});
         document.getElementById('stat-low').textContent = '$'+(price*0.988).toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('stat-vol').textContent = (Math.random()*2+1).toFixed(2)+'B';
-        document.getElementById('stat-oi').textContent = '$'+(Math.random()*0.8+0.4).toFixed(2)+'B';
+        const svol = document.getElementById('stat-vol');
+        if(svol) svol.textContent = (Math.random()*2+1).toFixed(2)+'B';
+        // stat-oi removed from HTML — guard against null
         const chg = changes[p]||0;
-        document.getElementById('ob-mid').style.color = chg>=0?'var(--pos)':'var(--neg)';
+        if(midEl) midEl.style.color = chg>=0?'var(--pos)':'var(--neg)';
       }
     });
   }, 400);
@@ -1258,18 +1347,16 @@ function applyTickerStats(d) {
 
   const statChg = document.getElementById('stat-chg');
   if(statChg){ statChg.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; statChg.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
-  document.getElementById('stat-high').textContent='$'+high.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById('stat-low').textContent='$'+low.toLocaleString(undefined,{minimumFractionDigits:2});
-  // Volume: show in millions or billions
+  const setEl = (id, val, color) => { const e=document.getElementById(id); if(e){e.textContent=val; if(color) e.style.color=color;} };
+  setEl('stat-high','$'+high.toLocaleString(undefined,{minimumFractionDigits:2}));
+  setEl('stat-low','$'+low.toLocaleString(undefined,{minimumFractionDigits:2}));
   const volStr = vol>=1e9?(vol/1e9).toFixed(2)+'B':(vol>=1e6?(vol/1e6).toFixed(2)+'M':(vol>=1e3?(vol/1e3).toFixed(2)+'K':vol.toFixed(2)));
-  document.getElementById('stat-vol').textContent = volStr+' '+coin;
+  setEl('stat-vol', volStr+' '+coin);
   const qvolStr = qvol>=1e9?'$'+(qvol/1e9).toFixed(2)+'B':'$'+(qvol/1e6).toFixed(2)+'M';
-  document.getElementById('stat-qvol').textContent = qvolStr;
+  setEl('stat-qvol', qvolStr);
   const tradesStr = trades>=1e6?(trades/1e6).toFixed(2)+'M':(trades>=1e3?(trades/1e3).toFixed(0)+'K':trades.toString());
-  document.getElementById('stat-trades').textContent = tradesStr;
-
-  document.getElementById('ob-mid').textContent = price.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById('ob-mid').style.color = chgPct>=0?'var(--pos)':'var(--neg)';
+  setEl('stat-trades', tradesStr);
+  setEl('ob-mid', price.toLocaleString(undefined,{minimumFractionDigits:2}), chgPct>=0?'var(--pos)':'var(--neg)');
 
   // Update market list row too
   updateMarketRowFromRest(activePair, price, chgPct, qvol);
@@ -1292,19 +1379,21 @@ function switchPair(pair) {
   activePair = pair;
   document.querySelectorAll('.mrow').forEach(r=>{r.classList.remove('active'); if(r.dataset.pair===pair) r.classList.add('active');});
   const coin = pair.replace('USDT','');
-  document.getElementById('chart-pair-label').textContent = coin+'/USDT';
-  document.getElementById('f-unit').textContent = coin;
-  document.getElementById('exec-btn').textContent = (orderSide==='buy'?'Buy ':'Sell ')+coin;
+  // Safe element updates — chart-pair-label removed with toolbar, guard all
+  const lbl = document.getElementById('chart-pair-label');
+  if(lbl) lbl.textContent = coin+'/USDT';
+  const unitEl = document.getElementById('f-unit');
+  if(unitEl) unitEl.textContent = coin;
+  const execBtn = document.getElementById('exec-btn');
+  if(execBtn) execBtn.textContent = (orderSide==='buy'?'Buy ':'Sell ')+coin;
   setPriceInForm();
-  // Fetch fresh REST stats immediately
   fetchTickerStats(pair);
-  if(tvWidget && typeof tvWidget.setSymbol === 'function') {
-    tvWidget.setSymbol('BINANCE:'+pair, currentTF);
-  } else { initTradingView(); }
-  // Reconnect depth WS for new pair — clear old sim first
+  // TradingView — always reinit; setSymbol is unreliable in sandboxed environments
+  initTradingView();
+  // Depth: kill old sim, restart for new pair
   wsDepthAlive = false;
   if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; }
-  setTimeout(connectDepthWS, 50); // slight delay to let pair switch settle
+  setTimeout(() => { renderFakeOB(); startSimDepth(); attemptDepthWS(); }, 80);
 }
 
 // ─── MARKET LIST ──────────────────────────────────────────────────────────
@@ -2007,6 +2096,78 @@ function toggleSecurity(btn, name) {
     }
   }
   showToast(isOn ? 'buy' : 'info', name, isOn ? 'Enabled' : 'Disabled');
+}
+
+
+// ─── CURRENCY ─────────────────────────────────────────────────────────────
+const CURRENCIES = [
+  { code:'USD', name:'US Dollar',      symbol:'$',  rate:1       },
+  { code:'GBP', name:'British Pound',  symbol:'£',  rate:0.792   },
+  { code:'EUR', name:'Euro',           symbol:'€',  rate:0.921   },
+  { code:'JPY', name:'Japanese Yen',   symbol:'¥',  rate:149.8   },
+  { code:'AUD', name:'Australian Dollar', symbol:'A$', rate:1.532 },
+  { code:'CAD', name:'Canadian Dollar',symbol:'C$', rate:1.358   },
+  { code:'CHF', name:'Swiss Franc',    symbol:'Fr', rate:0.898   },
+];
+let activeCurrency = CURRENCIES[0];
+
+function openCurrencyPicker() {
+  const list = document.getElementById('currency-list');
+  list.innerHTML = CURRENCIES.map(c => `
+    <div class="currency-option ${c.code===activeCurrency.code?'selected':''}" onclick="selectCurrency('${c.code}')">
+      <span class="cur-code">${c.code}</span>
+      <span class="cur-name">${c.name}</span>
+      <span class="cur-check">${c.code===activeCurrency.code?'✓':''}</span>
+    </div>`).join('');
+  const overlay = document.getElementById('currency-picker-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeCurrencyPicker(e) {
+  if(!e || e.target.id==='currency-picker-overlay') {
+    document.getElementById('currency-picker-overlay').style.display='none';
+  }
+}
+
+function selectCurrency(code) {
+  activeCurrency = CURRENCIES.find(c=>c.code===code);
+  const el = document.getElementById('pf-currency-val');
+  if(el) el.textContent = activeCurrency.code + ' — ' + activeCurrency.name;
+  document.getElementById('currency-picker-overlay').style.display='none';
+  showToast('buy','Currency Updated', 'Displaying values in '+activeCurrency.name+' ('+activeCurrency.symbol+')');
+  // Rebuild wallet view with new currency if it's visible
+  const walletEl = document.getElementById('view-wallet');
+  if(walletEl && walletEl.classList.contains('show')) renderWalletView();
+}
+
+// Convert USD amount to active currency
+function toCurrency(usdAmount) {
+  const v = usdAmount * activeCurrency.rate;
+  const sym = activeCurrency.symbol;
+  if(activeCurrency.code === 'JPY') return sym + Math.round(v).toLocaleString();
+  return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ─── PROFILE PANELS (sessions / activity) ─────────────────────────────────
+let openPanelId = null;
+
+function openProfilePanel(name) {
+  const panelId = 'profile-panel-' + name;
+  const panel = document.getElementById(panelId);
+  if(!panel) return;
+  if(openPanelId && openPanelId !== panelId) {
+    const prev = document.getElementById(openPanelId);
+    if(prev) prev.style.display = 'none';
+  }
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : '';
+  openPanelId = isOpen ? null : panelId;
+}
+
+function revokeSession(btn, deviceName) {
+  const row = btn.closest('.session-row');
+  if(row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+  showToast('info', 'Session Revoked', deviceName + ' has been signed out');
 }
 
 function updateClock() {
