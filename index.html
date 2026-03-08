@@ -3,10 +3,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Orion Wallet Simulator</title>
+<title>Orion Crypto Portfolio</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
 
 <style>
 
@@ -20,7 +20,7 @@ height:100vh;
 }
 
 .sidebar{
-width:220px;
+width:240px;
 background:#121520;
 padding:20px;
 border-right:1px solid #23283a;
@@ -56,18 +56,11 @@ flex-direction:column;
 }
 
 .topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
 padding:18px 28px;
 border-bottom:1px solid #23283a;
 background:#10131d;
-}
-
-.balance{
-font-size:28px;
+font-size:26px;
 font-weight:700;
-cursor:pointer;
 }
 
 .content{
@@ -88,8 +81,16 @@ border-collapse:collapse;
 }
 
 td,th{
-padding:12px 0;
+padding:10px;
 border-bottom:1px solid #23283a;
+}
+
+input{
+background:#1a1f30;
+border:none;
+color:white;
+padding:8px;
+border-radius:6px;
 }
 
 button{
@@ -101,66 +102,42 @@ border-radius:6px;
 cursor:pointer;
 }
 
-.hidden{display:none;}
-
-.lock{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#0b0d13;
-display:flex;
-align-items:center;
-justify-content:center;
-flex-direction:column;
+.hidden{
+display:none;
 }
 
-.editable{
-cursor:pointer;
-}
+.positive{color:#2ecc71;}
+.negative{color:#e74c3c;}
 
 </style>
 </head>
 
 <body>
 
-<div id="lock" class="lock">
-<h2>Unlock Wallet</h2>
-<input type="password" id="pin" placeholder="Enter PIN">
-<button onclick="unlock()">Unlock</button>
-</div>
-
 <div class="sidebar">
 
-<div class="logo">Orion Wallet</div>
+<div class="logo">Orion Portfolio</div>
 
 <div class="menu">
-<button onclick="show('wallet')">Wallet</button>
-<button onclick="show('send')">Send</button>
-<button onclick="show('receive')">Receive</button>
-<button onclick="show('transactions')">Transactions</button>
-<button onclick="show('settings')">Settings</button>
+<button onclick="show('wallet')">Portfolio</button>
+<button onclick="show('chart')">Charts</button>
+<button onclick="show('market')">Top 500 Market</button>
+<button onclick="show('gainers')">24h Movers</button>
+<button onclick="show('alerts')">Price Alerts</button>
 </div>
 
 </div>
 
 <div class="main">
 
-<div class="topbar">
-<div class="balance" id="portfolio" onclick="editPortfolio()">$0</div>
-</div>
+<div class="topbar" id="portfolioValue">$0</div>
 
 <div class="content">
 
 <div id="wallet">
 
 <div class="card">
-<h3>Portfolio Chart</h3>
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
+<h3>Your Assets</h3>
 
 <table>
 
@@ -169,60 +146,103 @@ cursor:pointer;
 <th>Balance</th>
 <th>Price</th>
 <th>Value</th>
+<th>P/L</th>
 </tr>
 
 <tr>
 <td>Bitcoin</td>
-<td class="editable" onclick="editBalance('btc')"><span id="btcBal"></span></td>
+<td id="btcBal">0.21</td>
 <td id="btcPrice"></td>
 <td id="btcVal"></td>
+<td id="btcPL"></td>
 </tr>
 
 <tr>
 <td>Ethereum</td>
-<td class="editable" onclick="editBalance('eth')"><span id="ethBal"></span></td>
+<td id="ethBal">2.4</td>
 <td id="ethPrice"></td>
 <td id="ethVal"></td>
+<td id="ethPL"></td>
 </tr>
 
 <tr>
 <td>Solana</td>
-<td class="editable" onclick="editBalance('sol')"><span id="solBal"></span></td>
+<td id="solBal">18</td>
 <td id="solPrice"></td>
 <td id="solVal"></td>
+<td id="solPL"></td>
 </tr>
 
 </table>
 
 </div>
+
 </div>
 
-<div id="send" class="hidden">
+<div id="chart" class="hidden">
+
 <div class="card">
-<h3>Send (Simulation)</h3>
-<button onclick="fakeTx('Sent')">Simulate Send</button>
-</div>
+<h3>Trading Chart</h3>
+<div id="tradingview_chart" style="height:500px;"></div>
 </div>
 
-<div id="receive" class="hidden">
-<div class="card">
-<h3>Receive</h3>
-<div id="qrcode"></div>
-<p id="address"></p>
-</div>
 </div>
 
-<div id="transactions" class="hidden">
+<div id="market" class="hidden">
+
 <div class="card">
-<h3>Transactions</h3>
-<ul id="txlist"></ul>
-</div>
+
+<h3>Top 500 Cryptocurrencies</h3>
+
+<table id="marketTable">
+
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Price</th>
+<th>24h</th>
+</tr>
+
+</table>
+
 </div>
 
-<div id="settings" class="hidden">
-<div class="card">
-<button onclick="lock()">Lock Wallet</button>
 </div>
+
+<div id="gainers" class="hidden">
+
+<div class="card">
+
+<h3>24h Gainers & Losers</h3>
+
+<table id="gainerTable">
+
+<tr>
+<th>Name</th>
+<th>Change</th>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+<div id="alerts" class="hidden">
+
+<div class="card">
+
+<h3>Price Alerts</h3>
+
+<input id="alertCoin" placeholder="coin id (bitcoin)">
+<input id="alertPrice" placeholder="target price">
+
+<button onclick="addAlert()">Add Alert</button>
+
+<ul id="alertList"></ul>
+
+</div>
+
 </div>
 
 </div>
@@ -231,135 +251,172 @@ cursor:pointer;
 
 <script>
 
-let balances={
-btc:localStorage.btc||0.214,
-eth:localStorage.eth||2.41,
-sol:localStorage.sol||18.5
-};
+let balances={btc:0.21,eth:2.4,sol:18};
 
 let prices={};
-let chart;
 
-function unlock(){
-if(document.getElementById("pin").value==="1234"){
-document.getElementById("lock").style.display="none";
-}
-}
+let buyPrices={
+btc:40000,
+eth:2000,
+sol:60
+};
 
-function lock(){
-document.getElementById("lock").style.display="flex";
-}
+let alerts=[];
 
 function show(id){
-document.querySelectorAll(".content > div").forEach(d=>d.classList.add("hidden"));
+document.querySelectorAll(".content > div").forEach(x=>x.classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
-}
-
-function fakeTx(type){
-let li=document.createElement("li");
-li.innerText=type+" at "+new Date().toLocaleString();
-document.getElementById("txlist").appendChild(li);
-}
-
-function editBalance(asset){
-
-let v=prompt("Enter new balance:");
-
-if(v!==null){
-balances[asset]=parseFloat(v);
-localStorage[asset]=v;
-updateValues();
-}
-
-}
-
-function editPortfolio(){
-
-let v=prompt("Enter new portfolio value (USD):");
-
-if(!v) return;
-
-let total=parseFloat(v);
-
-let sum=prices.btc*balances.btc+prices.eth*balances.eth+prices.sol*balances.sol;
-
-let ratio=total/sum;
-
-balances.btc*=ratio;
-balances.eth*=ratio;
-balances.sol*=ratio;
-
-updateValues();
-
-}
-
-function updateValues(){
-
-document.getElementById("btcBal").innerText=balances.btc;
-document.getElementById("ethBal").innerText=balances.eth;
-document.getElementById("solBal").innerText=balances.sol;
-
-let btcVal=balances.btc*prices.btc;
-let ethVal=balances.eth*prices.eth;
-let solVal=balances.sol*prices.sol;
-
-document.getElementById("btcVal").innerText="$"+btcVal.toFixed(2);
-document.getElementById("ethVal").innerText="$"+ethVal.toFixed(2);
-document.getElementById("solVal").innerText="$"+solVal.toFixed(2);
-
-let total=btcVal+ethVal+solVal;
-
-document.getElementById("portfolio").innerText="$"+total.toFixed(2);
-
-chart.data.datasets[0].data=[btcVal,ethVal,solVal];
-chart.update();
-
 }
 
 async function loadPrices(){
 
 let r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd");
+
 let d=await r.json();
 
 prices.btc=d.bitcoin.usd;
 prices.eth=d.ethereum.usd;
 prices.sol=d.solana.usd;
 
+updatePortfolio();
+
+}
+
+function updatePortfolio(){
+
+let btcVal=balances.btc*prices.btc;
+let ethVal=balances.eth*prices.eth;
+let solVal=balances.sol*prices.sol;
+
 document.getElementById("btcPrice").innerText="$"+prices.btc;
 document.getElementById("ethPrice").innerText="$"+prices.eth;
 document.getElementById("solPrice").innerText="$"+prices.sol;
 
-updateValues();
+document.getElementById("btcVal").innerText="$"+btcVal.toFixed(2);
+document.getElementById("ethVal").innerText="$"+ethVal.toFixed(2);
+document.getElementById("solVal").innerText="$"+solVal.toFixed(2);
+
+let btcPL=(prices.btc-buyPrices.btc)*balances.btc;
+let ethPL=(prices.eth-buyPrices.eth)*balances.eth;
+let solPL=(prices.sol-buyPrices.sol)*balances.sol;
+
+setPL("btcPL",btcPL);
+setPL("ethPL",ethPL);
+setPL("solPL",solPL);
+
+let total=btcVal+ethVal+solVal;
+
+document.getElementById("portfolioValue").innerText="$"+total.toFixed(2);
+
+checkAlerts();
 
 }
 
-function initChart(){
+function setPL(id,val){
 
-chart=new Chart(document.getElementById("chart"),{
-type:"doughnut",
-data:{
-labels:["BTC","ETH","SOL"],
-datasets:[{data:[1,1,1]}]
+let el=document.getElementById(id);
+
+el.innerText="$"+val.toFixed(2);
+
+el.className=val>=0?"positive":"negative";
+
 }
+
+async function loadMarket(){
+
+let r=await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=500&page=1");
+
+let d=await r.json();
+
+let table=document.getElementById("marketTable");
+
+d.forEach(c=>{
+
+let row=document.createElement("tr");
+
+row.innerHTML=`
+<td>${c.market_cap_rank}</td>
+<td>${c.name}</td>
+<td>$${c.current_price}</td>
+<td class="${c.price_change_percentage_24h>0?"positive":"negative"}">
+${c.price_change_percentage_24h.toFixed(2)}%
+</td>
+`;
+
+table.appendChild(row);
+
+});
+
+loadMovers(d);
+
+}
+
+function loadMovers(data){
+
+let sorted=[...data].sort((a,b)=>b.price_change_percentage_24h-a.price_change_percentage_24h);
+
+let top=[...sorted.slice(0,10),...sorted.slice(-10)];
+
+let table=document.getElementById("gainerTable");
+
+top.forEach(c=>{
+
+let row=document.createElement("tr");
+
+row.innerHTML=`
+<td>${c.name}</td>
+<td class="${c.price_change_percentage_24h>0?"positive":"negative"}">
+${c.price_change_percentage_24h.toFixed(2)}%
+</td>
+`;
+
+table.appendChild(row);
+
 });
 
 }
 
-function genAddress(){
+function addAlert(){
 
-let addr="bc1q"+Math.random().toString(36).substring(2,18);
+let coin=document.getElementById("alertCoin").value;
+let price=parseFloat(document.getElementById("alertPrice").value);
 
-document.getElementById("address").innerText=addr;
+alerts.push({coin,price});
 
-QRCode.toCanvas(addr,{width:180},function(err,canvas){
-document.getElementById("qrcode").appendChild(canvas);
+let li=document.createElement("li");
+
+li.innerText=coin+" → $"+price;
+
+document.getElementById("alertList").appendChild(li);
+
+}
+
+function checkAlerts(){
+
+alerts.forEach(a=>{
+
+if(prices[a.coin.substring(0,3)]>=a.price){
+
+alert(a.coin+" reached $"+a.price);
+
+}
+
 });
 
 }
 
-initChart();
-genAddress();
+new TradingView.widget({
+container_id:"tradingview_chart",
+width:"100%",
+height:500,
+symbol:"BINANCE:BTCUSDT",
+interval:"60",
+theme:"dark",
+style:"1"
+});
+
 loadPrices();
+loadMarket();
 
 setInterval(loadPrices,30000);
 
