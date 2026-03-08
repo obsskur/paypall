@@ -603,6 +603,13 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   background:var(--bg3); border:1px solid var(--border); border-radius:8px;
   padding:12px 14px; display:flex; align-items:center; justify-content:space-between;
 }
+
+.dev-tpv-preset {
+  padding:4px 10px; border-radius:5px; border:1px solid var(--border);
+  background:var(--bg3); color:var(--text1); font-size:11px; font-weight:600;
+  cursor:pointer; font-family:var(--mono); transition:all .12s;
+}
+.dev-tpv-preset:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
 </style>
 </head>
 <body>
@@ -1215,6 +1222,35 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
             </div>
           </div>
         </div>
+
+        <!-- ── TPV OVERRIDE ── -->
+        <div style="border-top:1px solid var(--border);padding-top:14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <div style="width:18px;height:18px;border-radius:4px;background:rgba(0,212,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="10" height="10" fill="none" stroke="var(--accent)" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);">Set Total Portfolio Value</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Enter a target USD value and click <strong style="color:var(--text1);">Apply TPV</strong> — USDT balance will be adjusted to hit that total exactly while keeping all other coin amounts unchanged.</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:6px;flex:1;transition:border-color .12s;" onfocusin="this.style.borderColor='var(--accent)'" onfocusout="this.style.borderColor='var(--border2)'">
+              <span style="font-size:12px;color:var(--text2);font-weight:500;">$</span>
+              <input id="dev-tpv-input" type="number" min="0" step="100" placeholder="e.g. 100000"
+                style="background:none;border:none;outline:none;color:var(--text0);font-family:var(--mono);font-size:13px;font-weight:600;flex:1;min-width:0;"
+                oninput="devPreviewTPV()">
+            </div>
+            <button onclick="devApplyTPV()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:opacity .12s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Apply TPV</button>
+          </div>
+          <div id="dev-tpv-preview" style="margin-top:8px;font-size:11px;color:var(--text2);min-height:16px;"></div>
+          <!-- Quick presets -->
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+            <button class="dev-tpv-preset" onclick="setTPVPreset(10000)">$10K</button>
+            <button class="dev-tpv-preset" onclick="setTPVPreset(50000)">$50K</button>
+            <button class="dev-tpv-preset" onclick="setTPVPreset(100000)">$100K</button>
+            <button class="dev-tpv-preset" onclick="setTPVPreset(250000)">$250K</button>
+            <button class="dev-tpv-preset" onclick="setTPVPreset(1000000)">$1M</button>
+          </div>
+        </div>
       </div>
       <div style="padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;align-items:center;">
         <button class="danger-btn" onclick="devClearData()" style="margin-right:auto;">Reset to Default</button>
@@ -1394,7 +1430,29 @@ let portfolio = {
   ]
 };
 
-let perfData = [30820, 31450, 31100, 31890, 32200, 31750, 32100, 32497];
+// Generates a realistic 7-day portfolio curve ending at `endTotal`
+function regenPerfData(endTotal) {
+  // Walk backwards from now with daily volatility ~1.2%
+  const days = 8; // Mon–Sun + Now (8 points)
+  const vol = 0.012;
+  const pts = [endTotal];
+  for(let i = 1; i < days; i++) {
+    const drift = (Math.random() - 0.46) * vol; // slight upward bias
+    pts.unshift(pts[0] / (1 + drift));
+  }
+  // Round to 2dp
+  perfData = pts.map(v => parseFloat(v.toFixed(2)));
+}
+
+// Compute current total and seed the initial curve
+function calcPortfolioTotal() {
+  return Object.entries(portfolio.balances).reduce(
+    (s,[c,a]) => s + a*(prices[c+'USDT']||(c==='USDT'?1:0)), 0
+  );
+}
+
+let perfData = [];
+regenPerfData(32497); // initial seed — will be refreshed on wallet open
 let allocChart = null, perfChart = null;
 let depthCtx = null;
 
@@ -2083,7 +2141,9 @@ function renderWalletView() {
       <td style="color:var(--pos)">${t.status}</td>
     </tr>`).join('');
 
-  // Charts
+  // Charts — regenerate perf curve to match current total
+  const currentTotal = calcPortfolioTotal();
+  regenPerfData(currentTotal);
   setTimeout(() => {
     initPerfChart();
     initAllocChart();
@@ -2109,10 +2169,10 @@ function initPerfChart() {
     options:{
       responsive:true, maintainAspectRatio:false,
       layout:{padding:{top:4,bottom:2}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>toCurrency(c.raw)}}},
       scales:{
         x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:6}},
-        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:4,callback:v=>'$'+(v/1000).toFixed(0)+'k'}}
+        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:4,callback:v=>{ const cv=v*activeCurrency.rate; return activeCurrency.symbol+(cv>=1000?(cv/1000).toFixed(0)+'k':cv.toFixed(0)); }}}
       }
     }
   });
@@ -2122,20 +2182,34 @@ function initAllocChart() {
   const ctx = document.getElementById('alloc-chart');
   if(!ctx) return;
   if(allocChart){ allocChart.destroy(); allocChart=null; }
+
+  // Build live allocation from actual balances + prices
+  const coinColors = { BTC:'#f7931a', ETH:'#627eea', SOL:'#14f195', BNB:'#f3ba2f',
+                       XRP:'#00aae4', ADA:'#0033ad', AVAX:'#e84142', DOT:'#e6007a', USDT:'#26a17b' };
+  const entries = Object.entries(portfolio.balances)
+    .map(([coin, amt]) => {
+      const usdVal = amt * (prices[coin+'USDT'] || (coin==='USDT' ? 1 : 0));
+      return { coin, usdVal };
+    })
+    .filter(e => e.usdVal > 0)
+    .sort((a,b) => b.usdVal - a.usdVal);
+
+  const total = entries.reduce((s,e) => s + e.usdVal, 0) || 1;
+  const labels = entries.map(e => e.coin);
+  const data   = entries.map(e => parseFloat((e.usdVal / total * 100).toFixed(2)));
+  const colors = entries.map(e => coinColors[e.coin] || '#888');
+
   allocChart = new Chart(ctx, {
     type:'doughnut',
     data:{
-      labels:['BTC','ETH','SOL','BNB','USDT'],
-      datasets:[{
-        data:[24.9,22.7,38.4,6.6,7.3],
-        backgroundColor:['#f7931a','#627eea','#14f195','#f3ba2f','#26a17b'],
-        borderWidth:0, hoverOffset:4
-      }]
+      labels,
+      datasets:[{ data, backgroundColor:colors, borderWidth:0, hoverOffset:4 }]
     },
     options:{
       responsive:true, maintainAspectRatio:false, cutout:'72%',
       plugins:{
-        legend:{position:'bottom',labels:{color:'#8b95a5',font:{size:10},padding:8,boxWidth:8}}
+        legend:{ position:'bottom', labels:{ color:'#8b95a5', font:{size:10}, padding:8, boxWidth:8 } },
+        tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${ctx.raw.toFixed(1)}%` } }
       }
     }
   });
@@ -2677,6 +2751,13 @@ function devApply() {
   // Refresh convert UI if open
   const convEl = document.getElementById('view-convert');
   if(convEl && convEl.style.display !== 'none') updateConvUI();
+  // Regenerate 7D performance chart to match new portfolio total
+  regenPerfData(calcPortfolioTotal());
+  // If wallet is open, refresh charts immediately
+  const walletOpenEl = document.getElementById('view-wallet');
+  if(walletOpenEl && walletOpenEl.classList.contains('show')) {
+    setTimeout(() => { initPerfChart(); initAllocChart(); }, 60);
+  }
   closeDevMenu();
   showToast('buy','Dev Menu','Changes applied — balances & prices updated');
 }
@@ -2693,6 +2774,7 @@ function devClearData() {
   PAIRS.forEach(p => updateMarketRowFromRest(p, prices[p], 0, 0));
   renderFakeOB();
   renderPositions();
+  regenPerfData(calcPortfolioTotal());
   const walletEl=document.getElementById('view-wallet');
   if(walletEl&&walletEl.classList.contains('show')) renderWalletView();
   closeDevMenu();
@@ -2919,6 +3001,60 @@ function renderConvHistory() {
 }
 
 
+
+
+// ─── TPV (Total Portfolio Value) OVERRIDE ────────────────────────
+function devPreviewTPV() {
+  const target = parseFloat(document.getElementById('dev-tpv-input').value);
+  const preview = document.getElementById('dev-tpv-preview');
+  if(!target || target <= 0) { preview.textContent = ''; return; }
+  const currentNonUSDT = Object.entries(portfolio.balances)
+    .filter(([c]) => c !== 'USDT')
+    .reduce((s,[c,a]) => s + a*(prices[c+'USDT']||0), 0);
+  const neededUSDT = target - currentNonUSDT;
+  if(neededUSDT < 0) {
+    preview.style.color = 'var(--neg)';
+    preview.textContent = `⚠ Coin holdings already exceed $${target.toLocaleString()} — reduce coin amounts first`;
+  } else {
+    preview.style.color = 'var(--text2)';
+    preview.textContent = `USDT will be set to $${neededUSDT.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} to reach $${target.toLocaleString()} total`;
+  }
+}
+
+function setTPVPreset(val) {
+  document.getElementById('dev-tpv-input').value = val;
+  devPreviewTPV();
+}
+
+function devApplyTPV() {
+  const target = parseFloat(document.getElementById('dev-tpv-input').value);
+  if(!target || target <= 0) { showToast('info','TPV','Enter a target value'); return; }
+  const currentNonUSDT = Object.entries(portfolio.balances)
+    .filter(([c]) => c !== 'USDT')
+    .reduce((s,[c,a]) => s + a*(prices[c+'USDT']||0), 0);
+  const neededUSDT = target - currentNonUSDT;
+  if(neededUSDT < 0) {
+    showToast('sell','TPV Error',`Coin holdings ($${currentNonUSDT.toLocaleString(undefined,{maximumFractionDigits:0})}) already exceed target`);
+    return;
+  }
+  portfolio.balances.USDT = parseFloat(neededUSDT.toFixed(2));
+  // Sync USDT field in dev menu
+  const usdtEl = document.getElementById('dev-bal-USDT');
+  if(usdtEl) usdtEl.value = portfolio.balances.USDT.toFixed(2);
+  // Update total display
+  const totalEl = document.getElementById('dev-current-total');
+  if(totalEl) totalEl.textContent = toCurrency(target);
+  // Regenerate perf data + refresh open views
+  regenPerfData(target);
+  const walletEl = document.getElementById('view-wallet');
+  if(walletEl && walletEl.classList.contains('show')) {
+    renderWalletView();
+  }
+  if(currentPosTab==='funds') renderFundsTab();
+  document.getElementById('dev-tpv-preview').textContent = '';
+  document.getElementById('dev-tpv-input').value = '';
+  showToast('buy','TPV Applied',`Portfolio set to ${toCurrency(target)}`);
+}
 
 function updateClock() {
   document.getElementById('clock').textContent = new Date().toISOString().split('T')[1].split('.')[0]+' UTC';
