@@ -754,6 +754,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   display:none; grid-column:2/5; grid-row:1/4;
   overflow-y:auto; background:var(--bg0);
 }
+#view-withdraw.show { display:block; }
 .wd-inner { max-width:560px; margin:0 auto; padding:32px 20px 80px; }
 .wd-header { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
 .wd-title { font-size:15px; font-weight:700; }
@@ -1536,7 +1537,7 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   </section>
 
   <!-- ══════ WITHDRAW VIEW ══════ -->
-  <div id="view-withdraw" style="display:none; grid-column:2/5; grid-row:1/4; overflow-y:auto; background:var(--bg0);">
+  <div id="view-withdraw">
     <div class="wd-inner">
 
       <!-- Header -->
@@ -2985,7 +2986,7 @@ function switchView(view) {
   // Withdraw
   const withdrawEl = document.getElementById('view-withdraw');
   if(withdrawEl) {
-    withdrawEl.style.display = isWithdraw ? '' : 'none';
+    withdrawEl.classList.toggle('show', isWithdraw);
     if(isWithdraw) {
       renderWithdrawView();
       withdrawEl.classList.remove('view-animate'); void withdrawEl.offsetWidth; withdrawEl.classList.add('view-animate');
