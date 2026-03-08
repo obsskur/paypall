@@ -610,6 +610,11 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   cursor:pointer; font-family:var(--mono); transition:all .12s;
 }
 .dev-tpv-preset:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
+
+/* Hide number input spinners everywhere */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+input[type=number] { -moz-appearance:textfield; appearance:textfield; }
 </style>
 </head>
 <body>
@@ -1431,16 +1436,28 @@ let portfolio = {
 };
 
 // Generates a realistic 7-day portfolio curve ending at `endTotal`
+// Seeded pseudo-random — deterministic from seed value, no Math.random()
+function seededRand(seed) {
+  // LCG: produces a float in [0,1) from an integer seed
+  let s = Math.abs(Math.round(seed)) % 2147483647;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
 function regenPerfData(endTotal) {
-  // Walk backwards from now with daily volatility ~1.2%
-  const days = 8; // Mon–Sun + Now (8 points)
-  const vol = 0.012;
+  // Seed is derived from the rounded total — same value → same curve every time
+  const seed = Math.round(endTotal * 100); // e.g. $32497.00 → 3249700
+  const rand = seededRand(seed);
+  const days = 8; // 7 previous days + today = 8 points
+  const vol = 0.013;
   const pts = [endTotal];
   for(let i = 1; i < days; i++) {
-    const drift = (Math.random() - 0.46) * vol; // slight upward bias
+    // Slight downward walk backwards (so chart trends upward toward now)
+    const drift = (rand() - 0.44) * vol;
     pts.unshift(pts[0] / (1 + drift));
   }
-  // Round to 2dp
   perfData = pts.map(v => parseFloat(v.toFixed(2)));
 }
 
