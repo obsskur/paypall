@@ -748,6 +748,160 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
 .cd-info-val { font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text0); }
 .asset-card { cursor:pointer; }
 .asset-card:hover { border-color:var(--accent); }
+
+/* ══════ WITHDRAW VIEW ══════ */
+#view-withdraw {
+  display:none; grid-column:2/5; grid-row:1/4;
+  overflow-y:auto; background:var(--bg0);
+}
+.wd-inner { max-width:560px; margin:0 auto; padding:32px 20px 80px; }
+.wd-header { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+.wd-title { font-size:15px; font-weight:700; }
+.wd-subtitle { font-size:11px; color:var(--text2); margin-top:1px; }
+
+/* Method cards */
+.wd-methods { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+.wd-method {
+  background:var(--bg1); border:2px solid var(--border); border-radius:12px;
+  padding:16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px;
+}
+.wd-method:hover { border-color:var(--border2); background:var(--bg2); }
+.wd-method.selected { border-color:var(--accent); background:rgba(0,212,255,.03); }
+.wd-method-logo {
+  width:46px; height:46px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;
+}
+.wd-method-info { flex:1; min-width:0; }
+.wd-method-name { font-size:13px; font-weight:700; color:var(--text0); margin-bottom:2px; }
+.wd-method-desc { font-size:11px; color:var(--text2); }
+.wd-method-meta { text-align:right; flex-shrink:0; }
+.wd-method-time { font-size:11px; font-weight:600; color:var(--text1); }
+.wd-method-fee { font-size:10px; color:var(--text2); margin-top:2px; }
+.wd-method-check {
+  width:18px; height:18px; border-radius:50%; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s;
+}
+.wd-method.selected .wd-method-check { background:var(--accent); border-color:var(--accent); }
+.wd-method.selected .wd-method-check::after { content:'✓'; font-size:10px; color:#000; font-weight:700; }
+
+/* Form card */
+.wd-form-card {
+  background:var(--bg1); border:1px solid var(--border); border-radius:12px;
+  overflow:hidden; margin-bottom:16px;
+}
+.wd-form-section {
+  padding:14px 16px; border-bottom:1px solid var(--border);
+}
+.wd-form-section:last-child { border-bottom:none; }
+.wd-form-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); margin-bottom:8px; }
+.wd-input-wrap {
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  display:flex; align-items:center; gap:8px; padding:10px 12px; transition:border-color .12s;
+}
+.wd-input-wrap:focus-within { border-color:var(--accent); }
+.wd-input {
+  background:none; border:none; outline:none; color:var(--text0);
+  font-family:var(--mono); font-size:13px; flex:1; min-width:0;
+}
+.wd-input-suffix { font-size:12px; color:var(--text2); font-weight:600; white-space:nowrap; }
+.wd-input-currency { font-size:12px; color:var(--accent); font-weight:700; }
+
+/* Coin selector in form */
+.wd-coin-sel {
+  display:flex; align-items:center; gap:8px; background:var(--bg3);
+  border:1px solid var(--border); border-radius:8px; padding:9px 12px;
+  cursor:pointer; transition:border-color .12s;
+}
+.wd-coin-sel:hover { border-color:var(--border2); }
+
+/* Limits row */
+.wd-limits-row {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  overflow:hidden;
+}
+.wd-limit-cell {
+  padding:10px 12px; border-right:1px solid var(--border);
+}
+.wd-limit-cell:last-child { border-right:none; }
+.wd-limit-label { font-size:9px; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px; }
+.wd-limit-val { font-size:12px; font-weight:600; font-family:var(--mono); color:var(--text0); }
+
+/* Fee breakdown */
+.wd-fee-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:12px; }
+.wd-fee-row:last-child { border-bottom:none; padding-bottom:0; }
+.wd-fee-label { color:var(--text2); }
+.wd-fee-val { font-family:var(--mono); font-weight:500; }
+
+/* Warning / info banners */
+.wd-banner {
+  border-radius:8px; padding:10px 14px; margin-bottom:12px;
+  display:flex; align-items:flex-start; gap:10px; font-size:11px; line-height:1.5;
+}
+.wd-banner-warn { background:rgba(240,180,41,.08); border:1px solid rgba(240,180,41,.2); color:#f0b429; }
+.wd-banner-info { background:rgba(0,212,255,.06); border:1px solid rgba(0,212,255,.15); color:var(--accent); }
+.wd-banner-ok   { background:rgba(0,200,150,.08); border:1px solid rgba(0,200,150,.2); color:var(--pos); }
+
+/* Submit button */
+.wd-submit {
+  width:100%; padding:14px; background:var(--accent); color:#000;
+  border:none; border-radius:8px; font-size:14px; font-weight:700;
+  cursor:pointer; font-family:var(--sans); transition:opacity .12s; margin-top:4px;
+}
+.wd-submit:hover { opacity:.88; }
+.wd-submit:disabled { background:var(--bg3); color:var(--text2); cursor:not-allowed; opacity:1; }
+
+/* Recent withdrawals */
+.wd-hist-item {
+  display:flex; align-items:center; gap:12px; padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.wd-hist-item:last-child { border-bottom:none; }
+.wd-hist-icon {
+  width:32px; height:32px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:12px;
+}
+.wd-status-badge {
+  font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; white-space:nowrap;
+}
+.wd-status-pending  { background:rgba(240,180,41,.12); color:#f0b429; }
+.wd-status-complete { background:rgba(0,200,150,.1);   color:var(--pos); }
+.wd-status-failed   { background:rgba(255,77,109,.1);  color:var(--neg); }
+
+/* Confirm modal */
+#wd-confirm-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:250;
+  display:none; align-items:center; justify-content:center;
+}
+.wd-confirm-card {
+  background:var(--bg2); border:1px solid var(--border2); border-radius:14px;
+  width:400px; max-width:95vw; animation:modalIn .15s ease;
+}
+.wd-confirm-header {
+  padding:18px 20px 14px; border-bottom:1px solid var(--border);
+}
+.wd-confirm-body { padding:16px 20px; }
+.wd-confirm-row { display:flex; justify-content:space-between; padding:6px 0; font-size:12px; }
+.wd-confirm-label { color:var(--text2); }
+.wd-confirm-val { font-family:var(--mono); font-weight:600; }
+.wd-confirm-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; }
+
+/* Progress stepper */
+.wd-stepper { display:flex; align-items:center; gap:0; margin-bottom:24px; }
+.wd-step { display:flex; align-items:center; gap:6px; flex:1; }
+.wd-step-dot {
+  width:24px; height:24px; border-radius:50%; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; flex-shrink:0; transition:all .2s;
+}
+.wd-step.done .wd-step-dot { background:var(--pos); border-color:var(--pos); color:#fff; }
+.wd-step.active .wd-step-dot { background:var(--accent); border-color:var(--accent); color:#000; }
+.wd-step.inactive .wd-step-dot { color:var(--text2); }
+.wd-step-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+.wd-step.done .wd-step-label, .wd-step.active .wd-step-label { color:var(--text0); }
+.wd-step.inactive .wd-step-label { color:var(--text2); }
+.wd-step-line { flex:1; height:1px; background:var(--border); margin:0 6px; }
+.wd-step.done .wd-step-line { background:var(--pos); }
 </style>
 </head>
 <body>
@@ -767,6 +921,9 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
     </button>
     <button class="nav-btn" id="btn-convert" onclick="switchView('convert')" title="Convert">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    </button>
+    <button class="nav-btn" id="btn-withdraw" onclick="switchView('withdraw')" title="Withdraw">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="17" y2="15"/></svg>
     </button>
     <div class="nav-spacer"></div>
     <button class="nav-btn" onclick="toggleTheme()" title="Theme">
@@ -1377,6 +1534,267 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
       <div id="cd-activity-list"></div>
     </div>
   </section>
+
+  <!-- ══════ WITHDRAW VIEW ══════ -->
+  <div id="view-withdraw" style="display:none; grid-column:2/5; grid-row:1/4; overflow-y:auto; background:var(--bg0);">
+    <div class="wd-inner">
+
+      <!-- Header -->
+      <div class="wd-header">
+        <button onclick="switchView('trade')" class="profile-back" title="Back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div class="wd-title">Withdraw Funds</div>
+          <div class="wd-subtitle">Send crypto to your bank or payment account</div>
+        </div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="wd-stepper" id="wd-stepper">
+        <div class="wd-step active" id="wds-1">
+          <div class="wd-step-dot">1</div>
+          <div class="wd-step-label">Method</div>
+          <div class="wd-step-line"></div>
+        </div>
+        <div class="wd-step inactive" id="wds-2">
+          <div class="wd-step-dot">2</div>
+          <div class="wd-step-label">Amount</div>
+          <div class="wd-step-line"></div>
+        </div>
+        <div class="wd-step inactive" id="wds-3">
+          <div class="wd-step-dot">3</div>
+          <div class="wd-step-label">Confirm</div>
+        </div>
+      </div>
+
+      <!-- KYC banner -->
+      <div class="wd-banner wd-banner-ok">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Identity verified · KYC Level 2 · Enhanced withdrawal limits active</span>
+      </div>
+
+      <!-- Daily limit banner -->
+      <div class="wd-banner wd-banner-info" id="wd-limit-banner">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="wd-limit-text">Daily limit: <strong>£8,500</strong> remaining · Resets in <strong id="wd-reset-timer">—</strong></span>
+      </div>
+
+      <!-- Step 1: Payment method -->
+      <div id="wd-step-1">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:12px;">Select Payment Method</div>
+        <div class="wd-methods">
+
+          <!-- PayPal -->
+          <div class="wd-method" id="wdm-paypal" onclick="selectWDMethod('paypal')">
+            <div class="wd-method-logo" style="background:#003087; color:#fff;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.59 3.025-2.566 6.243-8.558 6.243H9.828l-.487 3.084-.404 2.557-.009.055H12.5l.056-.346.734-4.64.046-.254h.463c3.77 0 6.72-1.53 7.58-5.955.32-1.63.157-2.992-.157-3.457z"/>
+              </svg>
+            </div>
+            <div class="wd-method-info">
+              <div class="wd-method-name">PayPal</div>
+              <div class="wd-method-desc">Send to your PayPal account · Instant conversion</div>
+            </div>
+            <div class="wd-method-meta">
+              <div class="wd-method-time">Instant</div>
+              <div class="wd-method-fee">1.5% fee</div>
+            </div>
+            <div class="wd-method-check" id="wdc-paypal"></div>
+          </div>
+
+          <!-- HSBC UK -->
+          <div class="wd-method" id="wdm-hsbc" onclick="selectWDMethod('hsbc')">
+            <div class="wd-method-logo" style="background:#DB0011; color:#fff; font-size:9px; font-weight:900; letter-spacing:-.5px;">
+              <svg width="34" height="20" viewBox="0 0 68 40" fill="white">
+                <polygon points="0,0 34,20 0,40"/>
+                <polygon points="68,0 34,20 68,40"/>
+                <polygon points="0,0 34,20 68,0"/>
+                <polygon points="0,40 34,20 68,40"/>
+              </svg>
+            </div>
+            <div class="wd-method-info">
+              <div class="wd-method-name">HSBC UK — Bank Transfer</div>
+              <div class="wd-method-desc">Faster Payments to your HSBC current account</div>
+            </div>
+            <div class="wd-method-meta">
+              <div class="wd-method-time">1–2 hrs</div>
+              <div class="wd-method-fee">£0.00 fee</div>
+            </div>
+            <div class="wd-method-check" id="wdc-hsbc"></div>
+          </div>
+
+        </div>
+
+        <button class="wd-submit" id="wd-next-1" onclick="wdGoStep(2)" disabled>Continue</button>
+      </div>
+
+      <!-- Step 2: Amount + details -->
+      <div id="wd-step-2" style="display:none;">
+
+        <!-- Selected method summary -->
+        <div id="wd-method-summary" style="display:flex;align-items:center;gap:10px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+          <div id="wdms-logo" class="wd-method-logo" style="width:34px;height:34px;border-radius:7px;"></div>
+          <div style="flex:1;">
+            <div id="wdms-name" style="font-size:12px;font-weight:700;"></div>
+            <div id="wdms-desc" style="font-size:10px;color:var(--text2);margin-top:1px;"></div>
+          </div>
+          <button onclick="wdGoStep(1)" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;padding:4px 10px;cursor:pointer;">Change</button>
+        </div>
+
+        <div class="wd-form-card">
+          <!-- Coin to withdraw -->
+          <div class="wd-form-section">
+            <div class="wd-form-label">Withdraw Asset</div>
+            <div class="wd-coin-sel" id="wd-coin-selector" onclick="openWDCoinPicker()">
+              <div id="wd-sel-icon" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;background:#f7931a22;color:#f7931a;">₿</div>
+              <div style="flex:1;">
+                <div id="wd-sel-coin" style="font-size:13px;font-weight:600;">BTC</div>
+                <div id="wd-sel-avail" style="font-size:10px;color:var(--text2);">Available: —</div>
+              </div>
+              <svg width="12" height="12" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <!-- Amount -->
+          <div class="wd-form-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div class="wd-form-label" style="margin:0;">Amount</div>
+              <button onclick="setWDMax()" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--accent);font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer;">MAX</button>
+            </div>
+            <div class="wd-input-wrap">
+              <input id="wd-amount" class="wd-input" type="number" placeholder="0.00000000" oninput="calcWDOutput()">
+              <span class="wd-input-suffix" id="wd-amount-unit">BTC</span>
+            </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--text2);">≈ <span id="wd-fiat-equiv" style="color:var(--text1);">—</span> &nbsp;·&nbsp; Min: <span id="wd-min-label">—</span></div>
+          </div>
+
+          <!-- Destination details -->
+          <div class="wd-form-section" id="wd-dest-section">
+            <div class="wd-form-label" id="wd-dest-label">PayPal Email Address</div>
+            <div class="wd-input-wrap">
+              <input id="wd-dest-input" class="wd-input" type="text" placeholder="your@paypal.com" oninput="validateWD()" style="font-family:var(--sans);font-size:13px;">
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text2);" id="wd-dest-hint">Must match your verified PayPal account</div>
+          </div>
+
+          <!-- 2FA confirm -->
+          <div class="wd-form-section">
+            <div class="wd-form-label">2FA Verification</div>
+            <div class="wd-input-wrap">
+              <input id="wd-2fa" class="wd-input" type="text" placeholder="6-digit code from authenticator" maxlength="6" oninput="validateWD()" style="font-family:var(--mono);letter-spacing:4px;font-size:15px;">
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text2);">Open your authenticator app to get the code</div>
+          </div>
+        </div>
+
+        <!-- Limits -->
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;">Withdrawal Limits</div>
+        <div class="wd-limits-row" style="margin-bottom:16px;">
+          <div class="wd-limit-cell">
+            <div class="wd-limit-label">Min</div>
+            <div class="wd-limit-val" id="wd-limit-min">—</div>
+          </div>
+          <div class="wd-limit-cell">
+            <div class="wd-limit-label">Daily</div>
+            <div class="wd-limit-val" id="wd-limit-daily">£8,500</div>
+          </div>
+          <div class="wd-limit-cell">
+            <div class="wd-limit-label">Monthly</div>
+            <div class="wd-limit-val" id="wd-limit-monthly">£50,000</div>
+          </div>
+        </div>
+
+        <!-- Fee breakdown -->
+        <div class="wd-form-card" style="margin-bottom:16px;">
+          <div class="wd-form-section">
+            <div class="wd-form-label">Fee Breakdown</div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Amount to withdraw</span><span class="wd-fee-val" id="wdf-amount">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label" id="wdf-fee-label">Service fee</span><span class="wd-fee-val" id="wdf-fee">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Network fee</span><span class="wd-fee-val" id="wdf-network">—</span></div>
+            <div class="wd-fee-row" style="font-weight:700;padding-top:8px;margin-top:4px;border-top:1px solid var(--border);"><span style="color:var(--text0);">You will receive</span><span class="wd-fee-val" style="color:var(--pos);" id="wdf-receive">—</span></div>
+          </div>
+        </div>
+
+        <div id="wd-warn" class="wd-banner wd-banner-warn" style="display:none;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="wd-warn-text"></span>
+        </div>
+
+        <button class="wd-submit" id="wd-next-2" onclick="wdGoStep(3)" disabled>Review Withdrawal</button>
+      </div>
+
+      <!-- Step 3: Confirmation + history -->
+      <div id="wd-step-3" style="display:none;">
+        <div class="wd-banner wd-banner-warn" style="margin-bottom:16px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <span>Please review carefully. Withdrawals <strong>cannot be reversed</strong> once submitted.</span>
+        </div>
+
+        <div class="wd-form-card" style="margin-bottom:16px;">
+          <div class="wd-form-section">
+            <div class="wd-form-label">Withdrawal Summary</div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Method</span><span class="wd-fee-val" id="wdc-method">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Destination</span><span class="wd-fee-val" id="wdc-dest" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;text-align:right;">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Asset</span><span class="wd-fee-val" id="wdc-asset">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Amount</span><span class="wd-fee-val" id="wdc-amount">—</span></div>
+            <div class="wd-fee-row"><span class="wd-fee-label">Total fees</span><span class="wd-fee-val" id="wdc-fees">—</span></div>
+            <div class="wd-fee-row" style="font-weight:700;padding-top:8px;margin-top:4px;border-top:1px solid var(--border);">
+              <span style="color:var(--text0);">You receive</span>
+              <span class="wd-fee-val" style="color:var(--pos);font-size:14px;" id="wdc-receive">—</span>
+            </div>
+          </div>
+          <div class="wd-form-section" style="background:rgba(0,200,150,.03);">
+            <div class="wd-fee-row" style="border:none;padding:0;"><span class="wd-fee-label">Est. arrival</span><span class="wd-fee-val" style="color:var(--pos);" id="wdc-eta">—</span></div>
+          </div>
+        </div>
+
+        <button class="wd-submit" id="wd-submit-btn" onclick="submitWithdrawal()">Confirm &amp; Submit Withdrawal</button>
+        <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text2);">
+          Secured by 256-bit encryption · Regulated under FCA · Reference: <span id="wd-ref-num" style="font-family:var(--mono);">—</span>
+        </div>
+      </div>
+
+      <!-- Withdrawal History -->
+      <div style="margin-top:32px;" id="wd-history-section">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span>Recent Withdrawals</span>
+          <span style="font-size:10px;color:var(--text2);font-weight:400;">Last 30 days</span>
+        </div>
+        <div id="wd-history-list">
+          <div style="font-size:12px;color:var(--text2);padding:20px 0;text-align:center;">No withdrawals yet</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WITHDRAW CONFIRM SUCCESS OVERLAY -->
+  <div id="wd-success-overlay" onclick="if(event.target===this)closeWDSuccess()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:250;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:380px;max-width:95vw;padding:32px 28px;text-align:center;animation:modalIn .2s ease;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,200,150,.12);border:2px solid var(--pos);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="24" height="24" fill="none" stroke="var(--pos)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Withdrawal Submitted</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.6;" id="wd-success-msg">Your withdrawal has been submitted and is being processed.</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:20px;text-align:left;">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:3px;">Transaction Reference</div>
+        <div style="font-family:var(--mono);font-size:13px;font-weight:600;" id="wd-success-ref">—</div>
+      </div>
+      <button onclick="closeWDSuccess()" class="wd-submit">Done</button>
+    </div>
+  </div>
+
+  <!-- WITHDRAW COIN PICKER -->
+  <div id="wd-coin-picker-overlay" onclick="if(event.target===this)closeWDCoinPicker()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:260;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:340px;max-width:95vw;max-height:70vh;display:flex;flex-direction:column;animation:modalIn .15s ease;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <div style="font-size:13px;font-weight:600;">Select Asset to Withdraw</div>
+        <button onclick="closeWDCoinPicker()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;">×</button>
+      </div>
+      <div id="wd-coin-list" style="overflow-y:auto;padding:6px 0;"></div>
+    </div>
+  </div>
 
   <!-- SESSIONS MODAL -->
   <div id="sessions-modal-overlay" onclick="if(event.target===this)closeSessionsModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;">
@@ -2535,7 +2953,8 @@ function switchView(view) {
   const isProfile = view === 'profile';
   const isConvert = view === 'convert';
   const isTrade   = view === 'trade';
-  const isOverlay = isWallet || isProfile || isConvert;
+  const isWithdraw = view === 'withdraw';
+  const isOverlay = isWallet || isProfile || isConvert || isWithdraw;
 
   // Trade panels
   tradeEls.forEach(id => {
@@ -2560,6 +2979,16 @@ function switchView(view) {
     if(isConvert) {
       updateConvUI(); renderConvHistory();
       convertEl.classList.remove('view-animate'); void convertEl.offsetWidth; convertEl.classList.add('view-animate');
+    }
+  }
+
+  // Withdraw
+  const withdrawEl = document.getElementById('view-withdraw');
+  if(withdrawEl) {
+    withdrawEl.style.display = isWithdraw ? '' : 'none';
+    if(isWithdraw) {
+      renderWithdrawView();
+      withdrawEl.classList.remove('view-animate'); void withdrawEl.offsetWidth; withdrawEl.classList.add('view-animate');
     }
   }
 
@@ -3653,6 +4082,323 @@ function buildCDChart(coin, tf) {
   document.getElementById('cd-chart-price').textContent = toCoinPrice(price);
   const periodLabels = {'1D':'24h','1W':'7D','1M':'30D','3M':'3M','1Y':'1Y'};
   document.getElementById('cd-chart-period').textContent = periodLabels[tf]+' change';
+}
+
+
+// ─── WITHDRAW ────────────────────────────────────────────────────
+let wdMethod = null;
+let wdCoin   = 'BTC';
+let wdStep   = 1;
+let wdHistory = [];
+
+const WD_METHODS = {
+  paypal: {
+    name: 'PayPal',
+    desc: 'Instant · Converted to GBP at market rate',
+    fee: 0.015,
+    networkFee: 0,
+    minUSD: 10,
+    eta: 'Instant (within 2 minutes)',
+    destLabel: 'PayPal Email Address',
+    destPlaceholder: 'your@paypal.com',
+    destHint: 'Must match your verified PayPal account',
+    destType: 'email',
+    logo: '#003087',
+    time: 'Instant',
+    feeLabel: 'PayPal service fee (1.5%)',
+  },
+  hsbc: {
+    name: 'HSBC UK — Bank Transfer',
+    desc: 'Faster Payments · GBP to your current account',
+    fee: 0,
+    networkFee: 0,
+    minUSD: 50,
+    eta: '1–2 hours (Mon–Fri, 08:00–18:00 GMT)',
+    destLabel: 'Account Number & Sort Code',
+    destPlaceholder: '12345678 / 40-47-84',
+    destHint: 'HSBC UK current account only · Faster Payments',
+    destType: 'text',
+    logo: '#DB0011',
+    time: '1–2 hrs',
+    feeLabel: 'Bank transfer fee',
+  }
+};
+
+function renderWithdrawView() {
+  // Update daily reset timer
+  updateWDTimer();
+  renderWDHistory();
+  // Refresh coin selector
+  updateWDCoinSelector();
+  calcWDOutput();
+}
+
+function updateWDTimer() {
+  const el = document.getElementById('wd-reset-timer');
+  if(!el) return;
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setUTCHours(24,0,0,0);
+  const diff = reset - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  el.textContent = h+'h '+m+'m';
+}
+
+function selectWDMethod(id) {
+  wdMethod = id;
+  document.querySelectorAll('.wd-method').forEach(m => m.classList.remove('selected'));
+  document.getElementById('wdm-'+id)?.classList.add('selected');
+  document.getElementById('wd-next-1').disabled = false;
+
+  // Update limits & labels for selected method
+  const m = WD_METHODS[id];
+  if(!m) return;
+  // Update dest label/placeholder/hint
+  document.getElementById('wd-dest-label').textContent = m.destLabel;
+  document.getElementById('wd-dest-input').placeholder = m.destPlaceholder;
+  document.getElementById('wd-dest-input').value = '';
+  document.getElementById('wd-dest-hint').textContent = m.destHint;
+  document.getElementById('wd-dest-input').type = m.destType;
+  document.getElementById('wdf-fee-label').textContent = m.feeLabel;
+}
+
+function wdGoStep(n) {
+  wdStep = n;
+  document.getElementById('wd-step-1').style.display = n===1?'':'none';
+  document.getElementById('wd-step-2').style.display = n===2?'':'none';
+  document.getElementById('wd-step-3').style.display = n===3?'':'none';
+
+  // Update stepper visuals
+  for(let i=1;i<=3;i++){
+    const el = document.getElementById('wds-'+i);
+    if(!el) continue;
+    el.classList.remove('active','done','inactive');
+    if(i < n) el.classList.add('done');
+    else if(i === n) el.classList.add('active');
+    else el.classList.add('inactive');
+    const dot = el.querySelector('.wd-step-dot');
+    if(dot) dot.textContent = i < n ? '✓' : i;
+  }
+
+  if(n===2) {
+    const m = WD_METHODS[wdMethod];
+    // Method summary bar
+    const mLogoEl = document.getElementById('wdms-logo');
+    if(mLogoEl) { mLogoEl.style.background = m.logo; mLogoEl.style.color='#fff'; mLogoEl.innerHTML = wdMethod==='paypal'
+      ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.59 3.025-2.566 6.243-8.558 6.243H9.828l-.487 3.084-.404 2.557-.009.055H12.5l.056-.346.734-4.64.046-.254h.463c3.77 0 6.72-1.53 7.58-5.955.32-1.63.157-2.992-.157-3.457z"/></svg>'
+      : '<svg width="28" height="16" viewBox="0 0 68 40" fill="white"><polygon points="0,0 34,20 0,40"/><polygon points="68,0 34,20 68,40"/><polygon points="0,0 34,20 68,0"/><polygon points="0,40 34,20 68,40"/></svg>';
+    }
+    document.getElementById('wdms-name').textContent = m.name;
+    document.getElementById('wdms-desc').textContent = m.desc;
+    // Min limit
+    const minFiat = toCurrency(m.minUSD);
+    document.getElementById('wd-limit-min').textContent = minFiat;
+    document.getElementById('wd-min-label').textContent = minFiat;
+    updateWDCoinSelector();
+    calcWDOutput();
+  }
+
+  if(n===3) {
+    // Populate review
+    const m = WD_METHODS[wdMethod];
+    const amt = parseFloat(document.getElementById('wd-amount').value)||0;
+    const price = prices[wdCoin+'USDT']||(wdCoin==='USDT'?1:0);
+    const usdVal = amt * price;
+    const fee = wdMethod==='paypal' ? usdVal * m.fee : 0;
+    const netFee = 0;
+    const receive = usdVal - fee - netFee;
+    document.getElementById('wdc-method').textContent = m.name;
+    document.getElementById('wdc-dest').textContent = document.getElementById('wd-dest-input').value;
+    document.getElementById('wdc-asset').textContent = amt.toFixed(8).replace(/\.?0+$/,'') + ' ' + wdCoin;
+    document.getElementById('wdc-amount').textContent = toCurrency(usdVal);
+    document.getElementById('wdc-fees').textContent = toCurrency(fee + netFee) + (fee===0?' (free)':'');
+    document.getElementById('wdc-receive').textContent = toCurrency(receive);
+    document.getElementById('wdc-eta').textContent = m.eta;
+    // Reference number
+    const ref = 'ORN-' + Date.now().toString(36).toUpperCase().slice(-8);
+    document.getElementById('wd-ref-num').textContent = ref;
+    document.getElementById('wd-success-ref').textContent = ref;
+  }
+}
+
+function updateWDCoinSelector() {
+  const color = COIN_COLORS[wdCoin]||'#888';
+  const label = COIN_LABELS[wdCoin]||wdCoin[0];
+  const amt   = portfolio.balances[wdCoin]||0;
+  const price = prices[wdCoin+'USDT']||(wdCoin==='USDT'?1:0);
+  const el = document.getElementById('wd-sel-icon');
+  if(el){ el.style.background=color+'22'; el.style.color=color; el.textContent=label; }
+  const cEl = document.getElementById('wd-sel-coin');
+  if(cEl) cEl.textContent = wdCoin;
+  const aEl = document.getElementById('wd-sel-avail');
+  if(aEl) aEl.textContent = 'Available: ' + amt.toLocaleString(undefined,{maximumFractionDigits:8}).replace(/\.?0+$/,'') + ' ' + wdCoin + ' ≈ ' + toCurrency(amt*price);
+  const uEl = document.getElementById('wd-amount-unit');
+  if(uEl) uEl.textContent = wdCoin;
+}
+
+function openWDCoinPicker() {
+  const list = document.getElementById('wd-coin-list');
+  const coins = Object.keys(portfolio.balances);
+  list.innerHTML = coins.map(coin => {
+    const color = COIN_COLORS[coin]||'#888';
+    const label = COIN_LABELS[coin]||coin[0];
+    const amt   = portfolio.balances[coin]||0;
+    const price = prices[coin+'USDT']||(coin==='USDT'?1:0);
+    const val   = amt * price;
+    return `<div class="conv-coin-option" onclick="pickWDCoin('${coin}')">
+      <div style="width:28px;height:28px;border-radius:50%;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">${label}</div>
+      <div style="flex:1;"><div class="conv-coin-sym">${coin}</div><div class="conv-coin-name">${COIN_NAMES[coin]||coin}</div></div>
+      <div class="conv-coin-bal">${amt.toLocaleString(undefined,{maximumFractionDigits:6}).replace(/\.?0+$/,'')}<br><span style="color:var(--text2);font-size:10px;">${toCurrency(val)}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('wd-coin-picker-overlay').style.display='flex';
+}
+function closeWDCoinPicker() {
+  document.getElementById('wd-coin-picker-overlay').style.display='none';
+}
+function pickWDCoin(coin) {
+  wdCoin = coin;
+  closeWDCoinPicker();
+  updateWDCoinSelector();
+  document.getElementById('wd-amount').value = '';
+  calcWDOutput();
+}
+
+function setWDMax() {
+  const amt = portfolio.balances[wdCoin]||0;
+  document.getElementById('wd-amount').value = amt.toFixed(8).replace(/\.?0+$/,'');
+  calcWDOutput();
+}
+
+function calcWDOutput() {
+  const amt = parseFloat(document.getElementById('wd-amount')?.value)||0;
+  const price = prices[wdCoin+'USDT']||(wdCoin==='USDT'?1:0);
+  const usdVal = amt * price;
+  const m = WD_METHODS[wdMethod] || WD_METHODS.paypal;
+  const fee = wdMethod==='paypal' ? usdVal * m.fee : 0;
+  const networkFee = 0;
+  const receive = usdVal - fee - networkFee;
+
+  const fiatEl = document.getElementById('wd-fiat-equiv');
+  if(fiatEl) fiatEl.textContent = toCurrency(usdVal);
+  document.getElementById('wdf-amount').textContent  = toCurrency(usdVal);
+  document.getElementById('wdf-fee').textContent     = fee > 0 ? toCurrency(fee) : 'Free';
+  document.getElementById('wdf-network').textContent = networkFee > 0 ? toCurrency(networkFee) : 'Free';
+  document.getElementById('wdf-receive').textContent = receive > 0 ? toCurrency(receive) : '—';
+
+  validateWD();
+}
+
+function validateWD() {
+  const amt      = parseFloat(document.getElementById('wd-amount')?.value)||0;
+  const dest     = document.getElementById('wd-dest-input')?.value?.trim()||'';
+  const twofa    = document.getElementById('wd-2fa')?.value?.trim()||'';
+  const available = portfolio.balances[wdCoin]||0;
+  const price    = prices[wdCoin+'USDT']||(wdCoin==='USDT'?1:0);
+  const usdVal   = amt * price;
+  const m        = WD_METHODS[wdMethod] || WD_METHODS.paypal;
+  const btn      = document.getElementById('wd-next-2');
+  const warn     = document.getElementById('wd-warn');
+  const warnTxt  = document.getElementById('wd-warn-text');
+
+  let err = '';
+  if(amt <= 0) err = '';
+  else if(amt > available) err = `Insufficient balance. You have ${available.toLocaleString(undefined,{maximumFractionDigits:8}).replace(/\.?0+$/,'')} ${wdCoin}.`;
+  else if(usdVal < m.minUSD) err = `Minimum withdrawal is ${toCurrency(m.minUSD)}. Enter a larger amount.`;
+
+  if(warn && warnTxt) {
+    warn.style.display = err ? 'flex' : 'none';
+    warnTxt.textContent = err;
+  }
+
+  // Validate 2FA: exactly 6 digits
+  const validDest = dest.length >= 5;
+  const valid2fa  = /^\d{6}$/.test(twofa);
+  const validAmt  = amt > 0 && !err;
+
+  if(btn) btn.disabled = !(validAmt && validDest && valid2fa);
+}
+
+function submitWithdrawal() {
+  const amt   = parseFloat(document.getElementById('wd-amount').value)||0;
+  const dest  = document.getElementById('wd-dest-input').value.trim();
+  const price = prices[wdCoin+'USDT']||(wdCoin==='USDT'?1:0);
+  const usdVal = amt * price;
+  const m     = WD_METHODS[wdMethod];
+  const fee   = wdMethod==='paypal' ? usdVal * m.fee : 0;
+  const receive = usdVal - fee;
+  const ref   = document.getElementById('wd-ref-num').textContent;
+  const now   = new Date().toLocaleString('en-GB',{hour12:false}).replace(',','');
+
+  // Deduct from balance
+  portfolio.balances[wdCoin] = Math.max(0, (portfolio.balances[wdCoin]||0) - amt);
+
+  // Log to history
+  const entry = {
+    ref, date:now, method:m.name, coin:wdCoin, amt, usdVal,
+    fee, receive, dest, status:'Pending', eta:m.eta
+  };
+  wdHistory.unshift(entry);
+
+  // Log to portfolio history too
+  portfolio.history.unshift({
+    date:now, pair:wdCoin+'/USDT', side:'withdraw',
+    price, qty:amt, fee, status:'Pending'
+  });
+
+  // Show success modal
+  const msg = `<strong>${amt.toLocaleString(undefined,{maximumFractionDigits:8}).replace(/\.?0+$/,'')} ${wdCoin}</strong> (${toCurrency(receive)} after fees) is being sent to <strong>${dest}</strong> via ${m.name}.<br><br>Est. arrival: ${m.eta}`;
+  document.getElementById('wd-success-msg').innerHTML = msg;
+  document.getElementById('wd-success-overlay').style.display='flex';
+}
+
+function closeWDSuccess() {
+  document.getElementById('wd-success-overlay').style.display='none';
+  // Reset form back to step 1
+  wdMethod = null;
+  wdStep   = 1;
+  document.querySelectorAll('.wd-method').forEach(m=>m.classList.remove('selected'));
+  document.getElementById('wd-next-1').disabled = true;
+  document.getElementById('wd-amount').value = '';
+  document.getElementById('wd-dest-input').value = '';
+  document.getElementById('wd-2fa').value = '';
+  wdGoStep(1);
+  renderWDHistory();
+}
+
+function renderWDHistory() {
+  const el = document.getElementById('wd-history-list');
+  if(!el) return;
+  if(wdHistory.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:20px 0;text-align:center;">No withdrawals yet</div>';
+    return;
+  }
+  // Simulate status changes: after 5s pending→processing, after 15s processing→complete
+  const now = Date.now();
+  el.innerHTML = wdHistory.map((h,i) => {
+    const isHSBC = h.method.includes('HSBC');
+    let status = h.status;
+    const methodLogo = isHSBC
+      ? `<div style="width:32px;height:32px;border-radius:7px;background:#DB0011;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="13" viewBox="0 0 68 40" fill="white"><polygon points="0,0 34,20 0,40"/><polygon points="68,0 34,20 68,40"/><polygon points="0,0 34,20 68,0"/><polygon points="0,40 34,20 68,40"/></svg></div>`
+      : `<div style="width:32px;height:32px;border-radius:7px;background:#003087;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.59 3.025-2.566 6.243-8.558 6.243H9.828l-.487 3.084-.404 2.557-.009.055H12.5l.056-.346.734-4.64.046-.254h.463c3.77 0 6.72-1.53 7.58-5.955.32-1.63.157-2.992-.157-3.457z"/></svg></div>`;
+    const badgeCls = status==='Pending'?'wd-status-pending':status==='Complete'?'wd-status-complete':'wd-status-pending';
+    return `<div class="wd-hist-item">
+      ${methodLogo}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div style="font-size:12px;font-weight:600;">${h.amt.toLocaleString(undefined,{maximumFractionDigits:8}).replace(/\.?0+$/,'')} ${h.coin}</div>
+          <span class="wd-status-badge ${badgeCls}">${status}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text2);">${h.method} · ${h.date}</div>
+        <div style="font-size:10px;color:var(--text2);font-family:var(--mono);">${h.ref}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--pos);">${toCurrency(h.receive)}</div>
+        <div style="font-size:10px;color:var(--text2);">received</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function updateClock() {
