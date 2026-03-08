@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORION // OBSIDIAN TERMINAL</title>
+    <title>ORION // SOVEREIGN V9</title>
     
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -12,361 +12,327 @@
     <style>
         :root {
             --bg: #030406; --surface: #0a0c10; --sub: #12151b;
-            --border: rgba(255,255,255,0.05); --accent: #fcd535;
+            --border: rgba(255,255,255,0.06); --accent: #fcd535;
             --pos: #0ecb81; --neg: #f6465d; --text: #eaecef; --dim: #707a8a;
             --font-mono: 'JetBrains Mono', monospace;
-            --radius: 4px; --ease: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; }
 
-        /* UI Shell */
-        .rail { width: 56px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 24px; z-index: 10; }
-        .rail-icon { color: var(--dim); cursor: pointer; transition: 0.3s var(--ease); padding: 10px; border-radius: 8px; }
-        .rail-icon:hover { color: var(--text); background: var(--sub); transform: scale(1.05); }
-        .rail-icon.active { color: var(--accent); background: rgba(252, 213, 53, 0.05); }
+        /* Sidebar Nav */
+        nav { width: 64px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 28px; z-index: 100; }
+        .nav-item { color: var(--dim); cursor: pointer; transition: 0.2s; padding: 12px; border-radius: 12px; position: relative; }
+        .nav-item:hover { color: var(--text); background: var(--sub); }
+        .nav-item.active { color: var(--accent); background: rgba(252, 213, 53, 0.08); }
+        .nav-item.active::after { content: ''; position: absolute; left: -20px; top: 15%; height: 70%; width: 3px; background: var(--accent); border-radius: 0 4px 4px 0; }
 
-        .app { flex: 1; display: flex; flex-direction: column; position: relative; }
+        /* Main Viewport */
+        .viewport { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .view-section { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; }
+        .view-section.active { display: flex; }
 
-        /* Header Ticker */
+        /* Global Header */
         header { 
-            height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); 
-            display: flex; align-items: center; padding: 0 20px; gap: 32px; font-size: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            height: 48px; background: var(--surface); border-bottom: 1px solid var(--border); 
+            display: flex; align-items: center; padding: 0 20px; gap: 32px; font-size: 11px;
         }
-        .h-item { display: flex; flex-direction: column; justify-content: center; }
-        .h-lbl { font-size: 9px; color: var(--dim); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .h-val { font-family: var(--font-mono); font-weight: 700; transition: color 0.3s; }
-        .ws-indicator { width: 6px; height: 6px; background: var(--pos); border-radius: 50%; box-shadow: 0 0 8px var(--pos); animation: pulse 2s infinite; }
 
-        /* Grid Framework */
-        .workspace { 
-            flex: 1; display: grid; grid-template-columns: 280px 1fr 320px; 
-            grid-template-rows: 1fr 280px; gap: 1px; background: var(--border);
-        }
+        /* Trade Grid */
+        .trade-grid { flex: 1; display: grid; grid-template-columns: 260px 1fr 300px; grid-template-rows: 1fr 240px; gap: 1px; background: var(--border); overflow: hidden; }
         .panel { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
-        .panel-h { 
-            padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); 
-            font-size: 10px; font-weight: 900; color: var(--dim); text-transform: uppercase; 
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .panel-h { padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 10px; font-weight: 900; color: var(--dim); text-transform: uppercase; }
 
-        /* Order Book Styling */
-        .ob-row { 
-            display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 2px 16px; 
-            font-family: var(--font-mono); font-size: 11px; position: relative; 
-            transition: background 0.2s;
-        }
-        .ob-row:hover { background: rgba(255,255,255,0.02); }
-        .ob-fill { position: absolute; right: 0; height: 100%; opacity: 0.18; transition: width 0.6s var(--ease); }
-        .ob-mid { 
-            padding: 14px; font-size: 20px; font-weight: 800; text-align: center; 
-            font-family: var(--font-mono); background: var(--sub); 
-            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-        }
+        /* Wallet View */
+        .wallet-container { padding: 40px; display: grid; grid-template-columns: 1fr 350px; gap: 30px; overflow-y: auto; }
+        .wallet-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+        .balance-hero { font-size: 42px; font-family: var(--font-mono); font-weight: 700; margin: 10px 0; }
+
+        /* Common Table */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; font-size: 10px; color: var(--dim); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        td { padding: 12px 16px; font-size: 12px; font-family: var(--font-mono); border-bottom: 1px solid rgba(255,255,255,0.02); }
+
+        /* Orderbook */
+        .ob-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 2px 16px; font-family: var(--font-mono); font-size: 11px; position: relative; }
+        .ob-fill { position: absolute; right: 0; height: 100%; opacity: 0.15; transition: width 0.3s; }
 
         /* Market List */
-        .m-row { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
-        .m-row:hover { background: var(--surface); padding-left: 20px; }
-        .m-row.active { border-left: 4px solid var(--accent); background: rgba(252, 213, 53, 0.03); }
+        .m-row { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; transition: 0.15s; }
+        .m-row:hover { background: var(--sub); }
+        .m-row.active { border-left: 3px solid var(--accent); background: rgba(252, 213, 53, 0.03); }
 
-        /* Execution Form */
-        .terminal { padding: 20px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border); background: var(--surface); }
-        .ord-type { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 8px; }
-        .type-btn { background: var(--sub); border: 1px solid var(--border); color: var(--dim); font-size: 9px; padding: 6px; font-weight: 800; border-radius: 4px; cursor: pointer; }
-        .type-btn.active { color: var(--accent); border-color: var(--accent); }
-        
-        .field { background: var(--sub); padding: 12px; border-radius: var(--radius); border: 1px solid transparent; transition: 0.2s; display: flex; align-items: center; }
-        .field:focus-within { border-color: var(--accent); background: #1a1e26; }
-        .field input { background: transparent; border: none; color: #fff; flex: 1; font-family: var(--font-mono); font-size: 13px; }
+        /* Execution Terminal */
+        .exec-bar { padding: 16px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); background: var(--surface); }
+        .btn { border: none; padding: 12px; border-radius: 4px; font-weight: 800; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-buy { background: var(--pos); color: #000; }
+        .btn-sell { background: var(--neg); color: #fff; }
 
-        .btn { border: none; padding: 14px; border-radius: var(--radius); font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; transition: 0.3s; }
-        .btn-buy { background: var(--pos); color: #000; box-shadow: 0 4px 15px rgba(14, 203, 129, 0.2); }
-        .btn-sell { background: var(--neg); color: #fff; box-shadow: 0 4px 15px rgba(246, 70, 93, 0.2); }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-
-        /* Tables & Positions */
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px 16px; font-size: 10px; color: var(--dim); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 12px 16px; font-size: 11px; font-family: var(--font-mono); border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .val-up { color: var(--pos); animation: glow-g 1s; }
-        .val-down { color: var(--neg); animation: glow-r 1s; }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        @keyframes glow-g { from { background: rgba(14, 203, 129, 0.1); } to { background: transparent; } }
-        @keyframes glow-r { from { background: rgba(246, 70, 93, 0.1); } to { background: transparent; } }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--sub); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <nav class="rail">
-        <div class="rail-icon active" data-lucide="bar-chart-2"></div>
-        <div class="rail-icon" data-lucide="layers"></div>
-        <div class="rail-icon" data-lucide="shield-check"></div>
+    <nav>
+        <div class="nav-item active" onclick="showSection('trade', this)" data-lucide="layout-grid"></div>
+        <div class="nav-item" onclick="showSection('wallet', this)" data-lucide="wallet"></div>
+        <div class="nav-item" onclick="showSection('security', this)" data-lucide="shield-check"></div>
         <div style="flex:1"></div>
-        <div class="rail-icon" data-lucide="settings"></div>
+        <div class="nav-item" data-lucide="settings"></div>
     </nav>
 
-    <div class="app">
+    <div class="viewport">
         <header>
-            <div style="font-weight:900; font-size:15px; letter-spacing:1px; color:var(--accent); display:flex; align-items:center; gap:10px;">
-                <div class="ws-indicator"></div> ORION <span style="color:#fff">OBSIDIAN</span>
+            <div style="font-weight:900; font-size:14px; color:var(--accent)">ORION SOVEREIGN</div>
+            <div id="h-pair" style="font-family:var(--font-mono); font-weight:700">BTC/USDT</div>
+            <div style="display:flex; gap:20px; color:var(--dim)">
+                <span>24h Vol: <b style="color:#fff">1.2B</b></span>
+                <span>Margin Ratio: <b id="h-ratio" style="color:var(--pos)">0.00%</b></span>
             </div>
-            <div class="h-item"><span class="h-lbl">Pair</span><span id="h-pair" class="h-val">---</span></div>
-            <div class="h-item"><span class="h-lbl">Last Price</span><span id="h-price" class="h-val">---</span></div>
-            <div class="h-item"><span class="h-lbl">24h Change</span><span id="h-change" class="h-val">---</span></div>
-            <div class="h-item"><span class="h-lbl">Funding / Timer</span><span style="color:var(--accent)" class="h-val">0.0100% / 07:42:11</span></div>
-            <div class="h-item"><span class="h-lbl">Margin Ratio</span><span id="h-ratio" class="h-val" style="color:var(--pos)">0.00%</span></div>
             <div style="flex:1"></div>
-            <div id="clock" style="font-family:var(--font-mono); font-size:11px; color:var(--dim)">00:00:00 UTC</div>
+            <div id="clock" style="font-family:var(--font-mono); color:var(--dim)">00:00:00 UTC</div>
         </header>
 
-        <main class="workspace">
-            <div class="panel">
-                <div class="panel-h">Markets <i data-lucide="search" style="width:12px"></i></div>
-                <div id="m-list" style="overflow-y:auto; flex:1"></div>
-            </div>
-
-            <div class="panel">
-                <div id="tv_obsidian" style="flex:1"></div>
-            </div>
-
-            <div class="panel" style="border-left:1px solid var(--border)">
-                <div class="panel-h">Order Book <span style="color:var(--accent)">0.1</span></div>
-                <div id="asks" style="display:flex; flex-direction:column-reverse; flex:1; overflow:hidden;"></div>
-                <div class="ob-mid" id="ob-mid">---</div>
-                <div id="bids" style="flex:1; overflow:hidden;"></div>
-                
-                <div class="terminal">
-                    <div class="ord-type">
-                        <div class="type-btn active">MARKET</div>
-                        <div class="type-btn">LIMIT</div>
-                        <div class="type-btn">STOP</div>
+        <section id="view-trade" class="view-section active">
+            <div class="trade-grid">
+                <div class="panel">
+                    <div class="panel-h">Market List</div>
+                    <div id="market-list" style="overflow-y:auto;"></div>
+                </div>
+                <div class="panel"><div id="tv_frame" style="flex:1"></div></div>
+                <div class="panel" style="border-left:1px solid var(--border)">
+                    <div class="panel-h">Orderbook</div>
+                    <div id="asks" style="display:flex; flex-direction:column-reverse; flex:1; overflow:hidden"></div>
+                    <div id="mid-price" style="padding:12px; text-align:center; font-family:var(--font-mono); font-size:18px; font-weight:800; background:var(--sub)">0.00</div>
+                    <div id="bids" style="flex:1; overflow:hidden"></div>
+                    <div class="exec-bar">
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--dim)">
+                            <span>Buying Power</span><span id="buy-power" style="color:#fff">$32,509.54</span>
+                        </div>
+                        <div style="background:var(--bg); padding:10px; border-radius:4px; display:flex;">
+                            <input type="number" id="trade-qty" placeholder="Quantity" style="background:transparent; border:none; color:#fff; flex:1; font-family:var(--font-mono)">
+                            <span id="trade-unit" style="font-size:10px; font-weight:800">BTC</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button class="btn btn-buy" onclick="exec('long')">Long</button>
+                            <button class="btn btn-sell" onclick="exec('short')">Short</button>
+                        </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="h-lbl">Equity</span><span id="eq-total" style="font-weight:700; font-family:var(--font-mono)">$32,509.54</span></div>
-                    <div class="field">
-                        <input type="number" id="t-qty" placeholder="Size">
-                        <span id="t-unit" style="font-size:10px; color:var(--dim); font-weight:800">BTC</span>
+                </div>
+                <div class="panel" style="grid-column: 1/3; border-top:1px solid var(--border)">
+                    <div class="panel-h">Open Positions</div>
+                    <div style="overflow-y:auto; flex:1">
+                        <table>
+                            <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>PNL</th><th>Action</th></tr></thead>
+                            <tbody id="pos-table"></tbody>
+                        </table>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin:4px 0;"><span class="h-lbl">Leverage</span><span id="lev-lbl" style="color:var(--accent); font-weight:800">20x</span></div>
-                    <input type="range" id="lev-sld" min="1" max="125" value="20" style="accent-color:var(--accent); width:100%; height:4px; margin-bottom:12px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <button class="btn btn-buy" onclick="exec('long')">Long</button>
-                        <button class="btn btn-sell" onclick="exec('short')">Short</button>
+                </div>
+                <div class="panel" style="border-top:1px solid var(--border); border-left:1px solid var(--border)">
+                    <div class="panel-h">Trade Log</div>
+                    <div id="trade-log" style="overflow-y:auto; flex:1; font-size:10px; font-family:var(--font-mono); color:var(--dim)"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-wallet" class="view-section">
+            <div class="wallet-container">
+                <div>
+                    <div class="wallet-card">
+                        <span class="h-lbl">Total Account Value</span>
+                        <div class="balance-hero" id="wall-total">$32,509.54</div>
+                        <span style="color:var(--pos); font-weight:700">+2.4% (Past 24h)</span>
+                    </div>
+                    <div class="panel" style="margin-top:20px; border:1px solid var(--border); border-radius:12px; background:var(--surface)">
+                        <div class="panel-h" style="background:transparent">Asset Breakdown</div>
+                        <table>
+                            <thead><tr><th>Asset</th><th>Balance</th><th>Value (USD)</th><th>Alloc %</th></tr></thead>
+                            <tbody id="wallet-table">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="wallet-card">
+                    <div class="panel-h" style="padding:0; margin-bottom:15px; background:transparent">Recent Activity</div>
+                    <div id="activity-list" style="display:flex; flex-direction:column; gap:12px;">
+                        <div style="font-size:11px; color:var(--dim)">No recent transactions recorded.</div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="panel" style="grid-column: 1/3; border-top:1px solid var(--border)">
-                <div class="panel-h">
-                    <div style="display:flex; gap:24px;">
-                        <span style="color:#fff; border-bottom:2px solid var(--accent); padding-bottom:10px;">Open Positions (0)</span>
-                        <span>Open Orders</span>
-                        <span>Trade History</span>
+        <section id="view-security" class="view-section">
+            <div style="padding:40px; max-width:800px;">
+                <h1 style="margin-bottom:20px">Security Dashboard</h1>
+                <div class="wallet-card" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <div>
+                        <div class="h-lbl">Account Health</div>
+                        <div style="color:var(--pos); font-size:24px; font-weight:800">OPTIMAL</div>
+                    </div>
+                    <div>
+                        <div class="h-lbl">Network Status</div>
+                        <div style="color:var(--pos); font-size:24px; font-weight:800">CONNECTED</div>
                     </div>
                 </div>
-                <div style="overflow-y:auto; flex:1">
-                    <table>
-                        <thead>
-                            <tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq. Price</th><th>Unrealized PNL (ROE%)</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="pos-table"></tbody>
-                    </table>
-                </div>
             </div>
-
-            <div class="panel" style="border-top:1px solid var(--border); border-left:1px solid var(--border)">
-                <div class="panel-h">Trade Log</div>
-                <div id="t-log" style="overflow-y:auto; flex:1;"></div>
-            </div>
-        </main>
+        </section>
     </div>
 
 <script>
-    // --- APP STATE ---
-    let state = JSON.parse(localStorage.getItem('obsidian_v8')) || {
+    let state = JSON.parse(localStorage.getItem('orion_v9')) || {
         wallet: 32509.54,
         positions: [],
-        active: 'BTCUSDT'
+        active: 'BTCUSDT',
+        log: []
     };
 
     let prices = {};
-    const assets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'PEPEUSDT', 'DOGEUSDT', 'LINKUSDT'];
+    const assets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'PEPEUSDT', 'LINKUSDT'];
 
-    // --- INITIALIZE ---
     window.onload = () => {
         lucide.createIcons();
-        renderMarketList();
-        switchPair(state.active);
-        initWS();
+        initMarkets();
+        setPair(state.active);
+        startWS();
         setInterval(engine, 100);
-        setInterval(clock, 1000);
-        // Pre-fill log
-        for(let i=0; i<5; i++) logTrade("System initialization complete. Connected to Binance Cloud.", "dim");
+        setInterval(() => document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC', 1000);
     };
 
-    function initWS() {
+    function startWS() {
         const stream = assets.map(a => a.toLowerCase() + '@ticker').join('/');
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}`);
         ws.onmessage = (e) => {
             const d = JSON.parse(e.data);
-            const rawPrice = parseFloat(d.c);
-            // Simulating Micro-Volatility Jitter
-            const jitter = (Math.random() - 0.5) * (rawPrice * 0.0001);
-            prices[d.s] = { p: rawPrice + jitter, chg: d.P, h: d.h, l: d.l };
-            updateMarketRow(d.s);
-            if(d.s === state.active) updateHeader(d.s);
+            prices[d.s] = parseFloat(d.c);
+            updateMarketUI(d);
         };
     }
 
-    // --- ENGINE ---
     function engine() {
-        let totalUpnl = 0;
+        let upnl = 0;
         let margin = 0;
         const tbody = document.getElementById('pos-table');
         tbody.innerHTML = '';
 
-        state.positions.forEach((p, i) => {
-            const mark = prices[p.sym]?.p || p.entry;
-            const pnl = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
-            const cost = (p.qty * p.entry) / p.lev;
-            const roe = ((pnl / cost) * 100).toFixed(2);
-            
-            totalUpnl += pnl;
-            margin += cost;
+        state.positions.forEach(p => {
+            const mark = prices[p.sym] || p.entry;
+            const diff = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
+            upnl += diff;
+            margin += (p.qty * p.entry) / 20; // 20x lev
 
-            // Liquidation Check
-            if((p.side === 'long' && mark <= p.liq) || (p.side === 'short' && mark >= p.liq)) {
-                logTrade(`LIQUIDATION: ${p.sym} position wiped @ ${mark.toFixed(4)}`, "neg");
-                state.wallet -= cost;
-                state.positions.splice(i, 1);
-                return;
-            }
-
-            const prec = p.sym.includes('PEPE') ? 8 : 2;
-            tbody.innerHTML += `
-                <tr class="${pnl >= 0 ? 'glow-g' : 'glow-r'}">
-                    <td style="font-weight:800">${p.sym} <span style="color:var(--dim); font-size:9px">${p.lev}x</span></td>
-                    <td style="color:${p.side==='long'?'var(--pos)':'var(--neg)'}">${p.side.toUpperCase()}</td>
-                    <td>${p.qty}</td>
-                    <td>${p.entry.toFixed(prec)}</td>
-                    <td>${mark.toFixed(prec)}</td>
-                    <td style="color:var(--neg)">${p.liq.toFixed(prec)}</td>
-                    <td style="color:${pnl>=0?'var(--pos)':'var(--neg)'}">$${pnl.toFixed(2)} (${roe}%)</td>
-                    <td><button onclick="closePos(${p.id})" style="color:var(--dim); background:none; border:none; cursor:pointer; font-weight:800">CLOSE</button></td>
-                </tr>
-            `;
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:700">${p.sym}</td>
+                <td style="color:${p.side==='long'?'var(--pos)':'var(--neg)'}">${p.side.toUpperCase()}</td>
+                <td>${p.qty}</td>
+                <td>${p.entry.toFixed(2)}</td>
+                <td>${mark.toFixed(2)}</td>
+                <td style="color:${diff>=0?'var(--pos)':'var(--neg)'}">$${diff.toFixed(2)}</td>
+                <td><button onclick="closePos(${p.id})" style="color:var(--dim); background:none; border:none; cursor:pointer">CLOSE</button></td>
+            </tr>`;
         });
 
-        const equity = state.wallet + totalUpnl;
-        const ratio = (margin / equity) * 100;
-        document.getElementById('eq-total').innerText = `$${equity.toLocaleString(undefined, {minimumFractionDigits:2})}`;
-        document.getElementById('h-ratio').innerText = ratio.toFixed(2) + '%';
-        document.getElementById('h-ratio').style.color = ratio > 75 ? 'var(--neg)' : 'var(--pos)';
+        const equity = state.wallet + upnl;
+        document.getElementById('buy-power').innerText = `$${equity.toLocaleString()}`;
+        document.getElementById('wall-total').innerText = `$${equity.toLocaleString()}`;
+        document.getElementById('h-ratio').innerText = ((margin / equity) * 100).toFixed(2) + '%';
+        
+        updateWalletBalances(equity);
+    }
+
+    function updateWalletBalances(equity) {
+        const wTable = document.getElementById('wallet-table');
+        wTable.innerHTML = `<tr><td>USDT</td><td>${state.wallet.toFixed(2)}</td><td>$${state.wallet.toFixed(2)}</td><td>${((state.wallet/equity)*100).toFixed(1)}%</td></tr>`;
+        
+        // Sum up crypto held in positions
+        const held = {};
+        state.positions.forEach(p => {
+            held[p.sym] = (held[p.sym] || 0) + (p.qty * (prices[p.sym] || p.entry));
+        });
+
+        for (let sym in held) {
+            wTable.innerHTML += `<tr><td>${sym.replace('USDT','')}</td><td>-</td><td>$${held[sym].toFixed(2)}</td><td>${((held[sym]/equity)*100).toFixed(1)}%</td></tr>`;
+        }
     }
 
     function exec(side) {
-        const qty = parseFloat(document.getElementById('t-qty').value);
-        const lev = parseInt(document.getElementById('lev-sld').value);
-        const price = prices[state.active]?.p;
+        const qty = parseFloat(document.getElementById('trade-qty').value);
+        const price = prices[state.active];
         if(!qty || !price) return;
 
-        const liqOffset = (price / lev) * 0.92;
-        const liq = side === 'long' ? price - liqOffset : price + liqOffset;
-
-        state.positions.push({ id: Date.now(), sym: state.active, side, qty, lev, entry: price, liq });
-        logTrade(`ORDER FILLED: ${side.toUpperCase()} ${qty} ${state.active} @ ${price.toFixed(4)}`, "pos");
-        document.getElementById('t-qty').value = '';
+        state.positions.push({ id: Date.now(), sym: state.active, side, qty, entry: price });
+        addLog(`ORDER FILLED: ${side.toUpperCase()} ${qty} ${state.active} @ ${price}`);
+        document.getElementById('trade-qty').value = '';
         save();
     }
 
     function closePos(id) {
         const p = state.positions.find(x => x.id === id);
-        const mark = prices[p.sym].p;
+        const mark = prices[p.sym];
         const pnl = p.side === 'long' ? (mark - p.entry) * p.qty : (p.entry - mark) * p.qty;
         state.wallet += pnl;
         state.positions = state.positions.filter(x => x.id !== id);
-        logTrade(`SETTLED: ${p.sym} closed. PNL: $${pnl.toFixed(2)}`, pnl>=0?"pos":"neg");
+        addLog(`CLOSED ${p.sym}: PNL $${pnl.toFixed(2)}`);
         save();
     }
 
-    // --- RENDERERS ---
-    function renderMarketList() {
-        const list = document.getElementById('m-list');
-        assets.forEach(a => {
-            const d = document.createElement('div');
-            d.className = `m-row ${a === state.active ? 'active' : ''}`;
-            d.id = `m-${a}`;
-            d.onclick = () => switchPair(a);
-            list.appendChild(d);
-        });
-    }
-
-    function updateMarketRow(sym) {
-        const row = document.getElementById(`m-${sym}`);
-        const prec = sym.includes('PEPE') ? 8 : 2;
-        if(row && prices[sym]) {
-            row.innerHTML = `<span>${sym.replace('USDT','')}</span><div style="text-align:right">
-                <div style="font-family:var(--font-mono); font-weight:700">${prices[sym].p.toFixed(prec)}</div>
-                <div style="font-size:10px; color:${prices[sym].chg >= 0 ? 'var(--pos)' : 'var(--neg)'}">${prices[sym].chg}%</div>
-            </div>`;
-        }
-    }
-
-    function updateHeader(sym) {
-        const prec = sym.includes('PEPE') ? 8 : 2;
-        const data = prices[sym];
-        document.getElementById('h-pair').innerText = sym;
-        document.getElementById('h-price').innerText = data.p.toFixed(prec);
-        document.getElementById('h-price').style.color = data.chg >= 0 ? 'var(--pos)' : 'var(--neg)';
-        document.getElementById('h-change').innerText = data.chg + '%';
-        document.getElementById('h-change').style.color = data.chg >= 0 ? 'var(--pos)' : 'var(--neg)';
-        document.getElementById('ob-mid').innerText = data.p.toFixed(prec);
-        renderOrderBook(data.p, prec);
-    }
-
-    function renderOrderBook(p, prec) {
-        const a = document.getElementById('asks'); const b = document.getElementById('bids');
-        a.innerHTML = ''; b.innerHTML = '';
-        for(let i=0; i<18; i++) {
-            const askW = Math.random() * 100; const bidW = Math.random() * 100;
-            const spread = p * 0.0005 * i;
-            a.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${askW}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p+spread).toFixed(prec)}</span><span style="text-align:right">${(Math.random()*2).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*50).toFixed(1)}K</span></div>`;
-            b.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${bidW}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p-spread).toFixed(prec)}</span><span style="text-align:right">${(Math.random()*2).toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*50).toFixed(1)}K</span></div>`;
-        }
-    }
-
-    function switchPair(a) {
+    function setPair(a) {
         state.active = a;
         document.querySelectorAll('.m-row').forEach(r => r.classList.remove('active'));
-        document.getElementById(`m-${a}`).classList.add('active');
-        document.getElementById('t-unit').innerText = a.replace('USDT','');
+        document.getElementById('row-'+a).classList.add('active');
+        document.getElementById('trade-unit').innerText = a.replace('USDT','');
+        document.getElementById('h-pair').innerText = a.replace('USDT','') + '/USDT';
+
         new TradingView.widget({
-            "container_id": "tv_obsidian", "autosize": true, "symbol": "BINANCE:"+a, "interval": "1",
-            "theme": "dark", "style": "1", "toolbar_bg": "#0a0c10", "backgroundColor": "#030406",
-            "studies": ["EMA@tv-basicstudies", "RSI@tv-basicstudies", "Volume@tv-basicstudies"]
+            "container_id": "tv_frame", "autosize": true, "symbol": "BINANCE:"+a, "interval": "1",
+            "theme": "dark", "style": "1", "toolbar_bg": "#0a0c10", "backgroundColor": "#030406"
         });
         save();
     }
 
-    function logTrade(m, type) {
-        const l = document.getElementById('t-log');
-        const color = type === "pos" ? 'var(--pos)' : type === "neg" ? 'var(--neg)' : 'var(--dim)';
-        l.innerHTML = `<div style="padding:8px 16px; font-size:10px; font-family:var(--font-mono); border-bottom:1px solid var(--border); animation: glow-g 0.5s;">
-            <span style="color:var(--dim)">[${new Date().toLocaleTimeString()}]</span> <span style="color:${color}">${m}</span>
-        </div>` + l.innerHTML;
+    function initMarkets() {
+        const list = document.getElementById('market-list');
+        assets.forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'm-row'; div.id = 'row-'+a;
+            div.onclick = () => setPair(a);
+            list.appendChild(div);
+        });
     }
 
-    function save() { localStorage.setItem('obsidian_v8', JSON.stringify(state)); }
-    function clock() { document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC'; }
-    document.getElementById('lev-sld').oninput = (e) => document.getElementById('lev-lbl').innerText = e.target.value + 'x';
+    function updateMarketUI(d) {
+        const row = document.getElementById('row-'+d.s);
+        if(row) {
+            row.innerHTML = `<span>${d.s.replace('USDT','')}</span><div style="text-align:right"><div>${parseFloat(d.c).toFixed(2)}</div><div style="font-size:10px; color:${d.P>=0?'var(--pos)':'var(--neg)'}">${d.P}%</div></div>`;
+        }
+        if(d.s === state.active) {
+            document.getElementById('mid-price').innerText = parseFloat(d.c).toFixed(2);
+            renderOB(parseFloat(d.c));
+        }
+    }
+
+    function renderOB(p) {
+        const ask = document.getElementById('asks'); const bid = document.getElementById('bids');
+        ask.innerHTML = ''; bid.innerHTML = '';
+        for(let i=0; i<12; i++) {
+            ask.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--neg)"></div><span style="color:var(--neg)">${(p+(i*0.5)).toFixed(2)}</span><span style="text-align:right">${Math.random().toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*10).toFixed(1)}K</span></div>`;
+            bid.innerHTML += `<div class="ob-row"><div class="ob-fill" style="width:${Math.random()*80}%; background:var(--pos)"></div><span style="color:var(--pos)">${(p-(i*0.5)).toFixed(2)}</span><span style="text-align:right">${Math.random().toFixed(3)}</span><span style="text-align:right; color:var(--dim)">${(Math.random()*10).toFixed(1)}K</span></div>`;
+        }
+    }
+
+    function showSection(id, el) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('view-'+id).classList.add('active');
+        el.classList.add('active');
+    }
+
+    function addLog(m) {
+        const l = document.getElementById('trade-log');
+        l.innerHTML = `<div style="padding:4px 12px; border-bottom:1px solid rgba(255,255,255,0.02)">[${new Date().toLocaleTimeString()}] ${m}</div>` + l.innerHTML;
+    }
+
+    function save() { localStorage.setItem('orion_v9', JSON.stringify(state)); }
 </script>
 </body>
 </html>
