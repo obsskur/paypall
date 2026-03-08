@@ -1,156 +1,173 @@
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>NovaVault Wallet</title>
+<title>Orion Wallet Desktop</title>
 
 <style>
 
 body{
-    margin:0;
-    font-family: "Segoe UI", Roboto, sans-serif;
-    background:#0e0f14;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+background:#0b0d13;
+color:white;
+display:flex;
+height:100vh;
 }
 
-.app{
-    width:360px;
-    height:720px;
-    background:#151823;
-    border-radius:24px;
-    box-shadow:0 20px 40px rgba(0,0,0,0.6);
-    overflow:hidden;
-    color:white;
+/* Sidebar */
+
+.sidebar{
+width:220px;
+background:#121520;
+padding:20px;
+border-right:1px solid #23283a;
 }
 
-.header{
-    padding:25px;
-    background:linear-gradient(120deg,#6a5cff,#9f4bff);
+.logo{
+font-size:18px;
+font-weight:600;
+margin-bottom:30px;
 }
 
-.header h1{
-    margin:0;
-    font-size:20px;
-    font-weight:600;
+.menu{
+display:flex;
+flex-direction:column;
+gap:12px;
 }
 
-.portfolio{
-    margin-top:15px;
+.menu button{
+background:none;
+border:none;
+color:#9aa0b5;
+text-align:left;
+padding:10px;
+border-radius:8px;
+cursor:pointer;
+font-size:14px;
 }
 
-.balance-label{
-    opacity:0.8;
-    font-size:13px;
+.menu button:hover{
+background:#1a1f30;
+color:white;
+}
+
+/* Main area */
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+/* Top bar */
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:18px 28px;
+border-bottom:1px solid #23283a;
+background:#10131d;
 }
 
 .balance{
-    font-size:34px;
-    font-weight:700;
-    margin-top:6px;
+font-size:28px;
+font-weight:700;
 }
 
-.card{
-    margin:-30px 20px 20px;
-    background:#1c2030;
-    border-radius:14px;
-    padding:20px;
+/* Content */
+
+.content{
+padding:28px;
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:24px;
 }
 
-.actions{
-    display:flex;
-    justify-content:space-between;
+/* Chart */
+
+.chart-card{
+background:#151a27;
+border-radius:14px;
+padding:20px;
 }
 
-.action{
-    text-align:center;
-    font-size:12px;
+.chart{
+height:220px;
 }
 
-.btn{
-    width:48px;
-    height:48px;
-    border-radius:12px;
-    background:#24293d;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    margin:auto;
-    margin-bottom:6px;
-    font-weight:bold;
+.chart svg{
+width:100%;
+height:100%;
 }
+
+/* Assets table */
 
 .assets{
-    padding:0 20px;
+background:#151a27;
+border-radius:14px;
+padding:20px;
+grid-column:span 2;
 }
 
-.assets h2{
-    font-size:15px;
-    margin-bottom:12px;
+.assets table{
+width:100%;
+border-collapse:collapse;
 }
 
-.asset{
-    display:flex;
-    justify-content:space-between;
-    padding:14px 0;
-    border-bottom:1px solid #262a3f;
+.assets th{
+text-align:left;
+font-size:13px;
+color:#9aa0b5;
+padding-bottom:12px;
 }
 
-.asset-left{
-    display:flex;
-    gap:12px;
+.assets td{
+padding:14px 0;
+border-top:1px solid #23283a;
 }
 
 .coin{
-    width:34px;
-    height:34px;
-    border-radius:50%;
-    background:linear-gradient(140deg,#f7931a,#ffb347);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:14px;
-    font-weight:bold;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-.coin.eth{
-    background:linear-gradient(140deg,#627eea,#9fa8ff);
+.coin-icon{
+width:30px;
+height:30px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
 }
 
-.coin.sol{
-    background:linear-gradient(140deg,#00ffa3,#00d4ff);
+.btc{background:linear-gradient(140deg,#f7931a,#ffbf66);}
+.eth{background:linear-gradient(140deg,#627eea,#8fa2ff);}
+.sol{background:linear-gradient(140deg,#00ffa3,#00d4ff);}
+
+.positive{color:#2ecc71;}
+.negative{color:#e74c3c;}
+
+.action-bar{
+display:flex;
+gap:10px;
 }
 
-.asset-name{
-    font-weight:600;
+.action-bar button{
+background:#20263a;
+border:none;
+color:white;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
 }
 
-.asset-balance{
-    text-align:right;
-}
-
-.value{
-    font-weight:600;
-}
-
-.change{
-    font-size:12px;
-    color:#2ecc71;
-}
-
-.nav{
-    position:absolute;
-    bottom:0;
-    width:360px;
-    background:#121520;
-    display:flex;
-    justify-content:space-around;
-    padding:12px 0;
-    border-top:1px solid #262a3f;
-    font-size:12px;
+.action-bar button:hover{
+background:#2b324c;
 }
 
 </style>
@@ -158,101 +175,117 @@ body{
 
 <body>
 
-<div class="app">
+<div class="sidebar">
 
-<div class="header">
-<h1>NovaVault</h1>
+<div class="logo">Orion Wallet</div>
 
-<div class="portfolio">
-<div class="balance-label">Portfolio Balance</div>
+<div class="menu">
+<button>Wallet</button>
+<button>Portfolio</button>
+<button>Exchange</button>
+<button>Transactions</button>
+<button>Security</button>
+<button>Settings</button>
+</div>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
 <div class="balance">$18,452.39</div>
+
+<div class="action-bar">
+<button>Send</button>
+<button>Receive</button>
+<button>Swap</button>
 </div>
 </div>
 
-<div class="card">
+<div class="content">
 
-<div class="actions">
+<div class="chart-card">
 
-<div class="action">
-<div class="btn">↑</div>
-Send
-</div>
+<h3>Portfolio Performance</h3>
 
-<div class="action">
-<div class="btn">↓</div>
-Receive
-</div>
+<div class="chart">
 
-<div class="action">
-<div class="btn">⇄</div>
-Swap
-</div>
+<svg viewBox="0 0 500 200" preserveAspectRatio="none">
 
-<div class="action">
-<div class="btn">+</div>
-Buy
+<polyline
+fill="none"
+stroke="#7c8cff"
+stroke-width="4"
+points="0,150 80,140 140,120 200,130 260,90 320,100 380,60 440,70 500,40"
+/>
+
+</svg>
+
 </div>
 
 </div>
+
+<div class="chart-card">
+
+<h3>Portfolio Allocation</h3>
+
+<p>BTC 70%</p>
+<p>ETH 22%</p>
+<p>SOL 8%</p>
 
 </div>
 
 <div class="assets">
 
-<h2>Assets</h2>
+<h3>Assets</h3>
 
-<div class="asset">
-<div class="asset-left">
-<div class="coin">₿</div>
-<div>
-<div class="asset-name">Bitcoin</div>
-<div style="font-size:12px;color:#aaa;">0.214 BTC</div>
-</div>
+<table>
+
+<tr>
+<th>Asset</th>
+<th>Balance</th>
+<th>Price</th>
+<th>Value</th>
+<th>24h</th>
+</tr>
+
+<tr>
+<td class="coin">
+<div class="coin-icon btc">₿</div>
+Bitcoin
+</td>
+<td>0.214 BTC</td>
+<td>$60,500</td>
+<td>$12,940</td>
+<td class="positive">+2.4%</td>
+</tr>
+
+<tr>
+<td class="coin">
+<div class="coin-icon eth">Ξ</div>
+Ethereum
+</td>
+<td>2.41 ETH</td>
+<td>$1,710</td>
+<td>$4,120</td>
+<td class="positive">+1.2%</td>
+</tr>
+
+<tr>
+<td class="coin">
+<div class="coin-icon sol">S</div>
+Solana
+</td>
+<td>18.5 SOL</td>
+<td>$75.2</td>
+<td>$1,392</td>
+<td class="positive">+5.7%</td>
+</tr>
+
+</table>
+
 </div>
 
-<div class="asset-balance">
-<div class="value">$12,940</div>
-<div class="change">+2.4%</div>
-</div>
-</div>
-
-<div class="asset">
-<div class="asset-left">
-<div class="coin eth">Ξ</div>
-<div>
-<div class="asset-name">Ethereum</div>
-<div style="font-size:12px;color:#aaa;">2.41 ETH</div>
-</div>
-</div>
-
-<div class="asset-balance">
-<div class="value">$4,120</div>
-<div class="change">+1.2%</div>
-</div>
-</div>
-
-<div class="asset">
-<div class="asset-left">
-<div class="coin sol">S</div>
-<div>
-<div class="asset-name">Solana</div>
-<div style="font-size:12px;color:#aaa;">18.5 SOL</div>
-</div>
-</div>
-
-<div class="asset-balance">
-<div class="value">$1,392</div>
-<div class="change">+5.7%</div>
-</div>
-</div>
-
-</div>
-
-<div class="nav">
-<div>Wallet</div>
-<div>Market</div>
-<div>Exchange</div>
-<div>Settings</div>
 </div>
 
 </div>
