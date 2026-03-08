@@ -739,6 +739,12 @@ input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   background:var(--border); border:1px solid var(--border); border-radius:8px;
   overflow:hidden; margin:0 20px 20px;
 }
+/* Cap coin detail content width in fullscreen */
+.cd-hero, .cd-stats-row, .cd-chart-section, .cd-info-grid,
+#view-coin-detail > div:last-child {
+  max-width:700px; width:100%; margin-left:auto; margin-right:auto; box-sizing:border-box;
+}
+.cd-stats-row { border-left:1px solid var(--border); border-right:1px solid var(--border); }
 .cd-info-cell {
   background:var(--bg1); padding:12px 16px;
 }
