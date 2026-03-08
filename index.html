@@ -1,173 +1,262 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PayPal Balance Generator</title>
-    <style>
-        body {
-            background: #f5f7fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .paypal-card {
-            width: 500px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: #0070ba;
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .balance-section {
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-        }
-        .balance-label {
-            color: #666;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .balance-amount {
-            font-size: 48px;
-            font-weight: 300;
-            color: #0070ba;
-            margin: 10px 0;
-        }
-        .balance-currency {
-            font-size: 24px;
-            color: #666;
-        }
-        .account-info {
-            padding: 20px;
-            background: #f9f9f9;
-            display: flex;
-            justify-content: space-between;
-        }
-        .account-detail {
-            text-align: left;
-        }
-        .detail-label {
-            color: #888;
-            font-size: 12px;
-        }
-        .detail-value {
-            font-weight: 600;
-            margin-top: 5px;
-        }
-        .actions {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 25px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .button-primary {
-            background: #0070ba;
-            color: white;
-        }
-        .button-secondary {
-            background: white;
-            border: 1px solid #0070ba;
-            color: #0070ba;
-        }
-        .controls {
-            padding: 20px;
-            background: #f0f0f0;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body>
-    <div class="paypal-card" id="paypalCard">
-        <div class="header">
-            <span class="logo">PayPal</span>
-            <span style="flex:1"></span>
-            <span>👤 John Doe</span>
-        </div>
-        
-        <div class="balance-section">
-            <div class="balance-label">Available Balance</div>
-            <div class="balance-amount" id="balanceDisplay">$12,345.67</div>
-            <div class="balance-currency">USD</div>
-        </div>
-        
-        <div class="account-info">
-            <div class="account-detail">
-                <div class="detail-label">Email</div>
-                <div class="detail-value" id="emailDisplay">user@example.com</div>
-            </div>
-            <div class="account-detail">
-                <div class="detail-label">Member since</div>
-                <div class="detail-value" id="sinceDisplay">2021</div>
-            </div>
-            <div class="account-detail">
-                <div class="detail-label">Status</div>
-                <div class="detail-value" id="statusDisplay">Verified</div>
-            </div>
-        </div>
-        
-        <div class="actions">
-            <button class="button button-primary">Send</button>
-            <button class="button button-secondary">Request</button>
-        </div>
-        
-        <div class="controls">
-            <h3>Customize (Your Eyes Only)</h3>
-            <label>Balance: $<input type="text" id="balanceInput" value="12345.67"></label>
-            <label>Email: <input type="text" id="emailInput" value="user@example.com"></label>
-            <label>Since: <input type="text" id="sinceInput" value="2021"></label>
-            <label>Status: <input type="text" id="statusInput" value="Verified"></label>
-            <button onclick="updateDisplay()">Update</button>
-        </div>
-    </div>
+<meta charset="UTF-8">
+<title>NovaVault Wallet</title>
 
-    <script>
-        function updateDisplay() {
-            let balance = document.getElementById('balanceInput').value;
-            let email = document.getElementById('emailInput').value;
-            let since = document.getElementById('sinceInput').value;
-            let status = document.getElementById('statusInput').value;
-            
-            // Format balance with commas
-            let balanceParts = balance.split('.');
-            balanceParts[0] = balanceParts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            let formattedBalance = '$' + balanceParts.join('.');
-            
-            document.getElementById('balanceDisplay').innerText = formattedBalance;
-            document.getElementById('emailDisplay').innerText = email;
-            document.getElementById('sinceDisplay').innerText = since;
-            document.getElementById('statusDisplay').innerText = status;
-        }
-        
-        // Initialize
-        updateDisplay();
-    </script>
+<style>
+
+body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background:#0e0f14;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.app{
+    width:360px;
+    height:720px;
+    background:#151823;
+    border-radius:24px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.6);
+    overflow:hidden;
+    color:white;
+}
+
+.header{
+    padding:25px;
+    background:linear-gradient(120deg,#6a5cff,#9f4bff);
+}
+
+.header h1{
+    margin:0;
+    font-size:20px;
+    font-weight:600;
+}
+
+.portfolio{
+    margin-top:15px;
+}
+
+.balance-label{
+    opacity:0.8;
+    font-size:13px;
+}
+
+.balance{
+    font-size:34px;
+    font-weight:700;
+    margin-top:6px;
+}
+
+.card{
+    margin:-30px 20px 20px;
+    background:#1c2030;
+    border-radius:14px;
+    padding:20px;
+}
+
+.actions{
+    display:flex;
+    justify-content:space-between;
+}
+
+.action{
+    text-align:center;
+    font-size:12px;
+}
+
+.btn{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    background:#24293d;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+    margin-bottom:6px;
+    font-weight:bold;
+}
+
+.assets{
+    padding:0 20px;
+}
+
+.assets h2{
+    font-size:15px;
+    margin-bottom:12px;
+}
+
+.asset{
+    display:flex;
+    justify-content:space-between;
+    padding:14px 0;
+    border-bottom:1px solid #262a3f;
+}
+
+.asset-left{
+    display:flex;
+    gap:12px;
+}
+
+.coin{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:linear-gradient(140deg,#f7931a,#ffb347);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:bold;
+}
+
+.coin.eth{
+    background:linear-gradient(140deg,#627eea,#9fa8ff);
+}
+
+.coin.sol{
+    background:linear-gradient(140deg,#00ffa3,#00d4ff);
+}
+
+.asset-name{
+    font-weight:600;
+}
+
+.asset-balance{
+    text-align:right;
+}
+
+.value{
+    font-weight:600;
+}
+
+.change{
+    font-size:12px;
+    color:#2ecc71;
+}
+
+.nav{
+    position:absolute;
+    bottom:0;
+    width:360px;
+    background:#121520;
+    display:flex;
+    justify-content:space-around;
+    padding:12px 0;
+    border-top:1px solid #262a3f;
+    font-size:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="header">
+<h1>NovaVault</h1>
+
+<div class="portfolio">
+<div class="balance-label">Portfolio Balance</div>
+<div class="balance">$18,452.39</div>
+</div>
+</div>
+
+<div class="card">
+
+<div class="actions">
+
+<div class="action">
+<div class="btn">↑</div>
+Send
+</div>
+
+<div class="action">
+<div class="btn">↓</div>
+Receive
+</div>
+
+<div class="action">
+<div class="btn">⇄</div>
+Swap
+</div>
+
+<div class="action">
+<div class="btn">+</div>
+Buy
+</div>
+
+</div>
+
+</div>
+
+<div class="assets">
+
+<h2>Assets</h2>
+
+<div class="asset">
+<div class="asset-left">
+<div class="coin">₿</div>
+<div>
+<div class="asset-name">Bitcoin</div>
+<div style="font-size:12px;color:#aaa;">0.214 BTC</div>
+</div>
+</div>
+
+<div class="asset-balance">
+<div class="value">$12,940</div>
+<div class="change">+2.4%</div>
+</div>
+</div>
+
+<div class="asset">
+<div class="asset-left">
+<div class="coin eth">Ξ</div>
+<div>
+<div class="asset-name">Ethereum</div>
+<div style="font-size:12px;color:#aaa;">2.41 ETH</div>
+</div>
+</div>
+
+<div class="asset-balance">
+<div class="value">$4,120</div>
+<div class="change">+1.2%</div>
+</div>
+</div>
+
+<div class="asset">
+<div class="asset-left">
+<div class="coin sol">S</div>
+<div>
+<div class="asset-name">Solana</div>
+<div style="font-size:12px;color:#aaa;">18.5 SOL</div>
+</div>
+</div>
+
+<div class="asset-balance">
+<div class="value">$1,392</div>
+<div class="change">+5.7%</div>
+</div>
+</div>
+
+</div>
+
+<div class="nav">
+<div>Wallet</div>
+<div>Market</div>
+<div>Exchange</div>
+<div>Settings</div>
+</div>
+
+</div>
+
 </body>
 </html>
+```
