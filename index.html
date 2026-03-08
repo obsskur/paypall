@@ -85,6 +85,8 @@
         .btn { border: none; padding: 8px; border-radius: 4px; font-weight: 800; cursor: pointer; }
         .exec-bar { padding: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); }
 
+        #trade-log { overflow-y:auto; flex:1; font-size:10px; font-family:var(--font-mono); color:var(--dim); padding:10px; white-space: pre-wrap; }
+
         @media (max-width: 900px) {
             .wallet-layout { grid-template-columns: 1fr; padding-bottom: 80px; }
         }
@@ -144,8 +146,8 @@
                     </div>
                 </div>
                 <div class="panel" style="border-top:1px solid var(--border);">
-                    <div class="panel-h">Terminal</div>
-                    <div id="trade-log" style="overflow-y:auto; flex:1; font-size:9px; font-family:var(--font-mono); color:var(--dim); padding:10px;"></div>
+                    <div class="panel-h">Terminal Log</div>
+                    <div id="trade-log"></div>
                 </div>
             </div>
         </section>
@@ -191,63 +193,46 @@
 
 <script>
     const INITIAL_STATE = {
-        wallet: 42050.00,
-        balances: { BTC: 0.45, ETH: 5.2, SOL: 120, USDT: 12500 },
+        wallet: 65420.00,
+        balances: { BTC: 0.52, ETH: 8.4, SOL: 245.5, USDT: 18200 },
         positions: [
             { id: 101, sym: 'BTCUSDT', side: 'long', qty: 0.25, entry: 64200.50 },
-            { id: 102, sym: 'ETHUSDT', side: 'short', qty: 2.0, entry: 3650.20 }
+            { id: 102, sym: 'ETHUSDT', side: 'short', qty: 2.0, entry: 3650.20 },
+            { id: 103, sym: 'SOLUSDT', side: 'long', qty: 50.0, entry: 138.45 },
+            { id: 104, sym: 'BNBUSDT', side: 'long', qty: 10.0, entry: 580.00 }
         ],
         history: [
+            { date: '2026-03-08 14:10', coin: 'ETH', type: 'Purchase', amount: '2.50', status: 'Completed', val: '8750.00' },
             { date: '2026-03-08 11:20', coin: 'SOL', type: 'Purchase', amount: '50.00', status: 'Completed', val: '7250.00' },
             { date: '2026-03-08 08:45', coin: 'USDT', type: 'Deposit', amount: '12500.00', status: 'Completed', val: '12500.00' },
+            { date: '2026-03-07 21:30', coin: 'BTC', type: 'Purchase', amount: '0.05', status: 'Completed', val: '3350.00' },
             { date: '2026-03-07 14:20', coin: 'BTC', type: 'Transfer', amount: '0.10', status: 'Completed', val: '6700.00' },
-            { date: '2026-03-06 19:12', coin: 'ETH', type: 'Withdrawal', amount: '1.50', status: 'Completed', val: '5250.00' },
-            { date: '2026-03-05 22:10', coin: 'BTC', type: 'Deposit', amount: '0.35', status: 'Completed', val: '22400.00' }
+            { date: '2026-03-06 19:12', coin: 'ETH', type: 'Withdrawal', amount: '1.50', status: 'Completed', val: '5250.00' }
         ],
+        logs: ["[SYSTEM] Kernel V10.0 initialized successfully."],
         active: 'BTCUSDT',
         theme: 'dark'
     };
 
     let state = JSON.parse(localStorage.getItem('orion_pro_v10')) || INITIAL_STATE;
-    let prices = { BTCUSDT: 67000, ETHUSDT: 3500, SOLUSDT: 145, USDTUSDT: 1 };
+    let prices = { BTCUSDT: 67000, ETHUSDT: 3500, SOLUSDT: 145, BNBUSDT: 600, USDTUSDT: 1 };
     const assets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT'];
 
     window.onload = () => {
         applyTheme(state.theme);
         if (typeof lucide !== 'undefined') lucide.createIcons();
         initMarkets();
-        // Added check for TradingView presence
-        if (typeof TradingView !== 'undefined') {
-            initTradingView();
-        }
+        if (typeof TradingView !== 'undefined') initTradingView();
         if (typeof Chart !== 'undefined') initCharts();
+        
         startWS();
         setInterval(engine, 200);
         setInterval(updateTime, 1000);
+        
         renderWallet();
-        addLog("System initialized. Secure connection established.");
-        addLog("Recovered active positions from session.");
+        renderLogs();
+        addLog("Network connection established with Binance Hub.");
     };
-
-    // FIXED: Added the missing initTradingView function
-    function initTradingView() {
-        if (document.getElementById('tv_frame')) {
-            new TradingView.widget({
-                "autosize": true,
-                "symbol": "BINANCE:" + state.active,
-                "interval": "15",
-                "timezone": "Etc/UTC",
-                "theme": state.theme,
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#f1f3f6",
-                "enable_publishing": false,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "container_id": "tv_frame"
-            });
-        }
-    }
 
     function startWS() {
         const stream = assets.map(a => a.toLowerCase() + '@ticker').join('/');
@@ -261,8 +246,30 @@
         const depthWs = new WebSocket(`wss://stream.binance.com:9443/ws/${state.active.toLowerCase()}@depth10@100ms`);
         depthWs.onmessage = (e) => {
             const d = JSON.parse(e.data);
-            renderOBReal(d.b, d.a);
+            // FIX: Added null/undefined check for bids and asks
+            if (d.b && d.a) {
+                renderOBReal(d.b, d.a);
+            }
         };
+    }
+
+    function renderOBReal(bids, asks) {
+        const askDiv = document.getElementById('asks'); 
+        const bidDiv = document.getElementById('bids');
+        if(!askDiv || !bidDiv || !asks || !bids) return;
+
+        // FIX: Ensure slice is only called on defined arrays
+        askDiv.innerHTML = asks.slice(0, 8).map(a => `
+            <div class="ob-row" style="color:var(--neg)">
+                <span>${parseFloat(a[0]).toFixed(2)}</span>
+                <span>${parseFloat(a[1]).toFixed(4)}</span>
+            </div>`).join('');
+
+        bidDiv.innerHTML = bids.slice(0, 8).map(b => `
+            <div class="ob-row" style="color:var(--pos)">
+                <span>${parseFloat(b[0]).toFixed(2)}</span>
+                <span>${parseFloat(b[1]).toFixed(4)}</span>
+            </div>`).join('');
     }
 
     function engine() {
@@ -292,22 +299,29 @@
         updateWalletStats(livePNL, margin);
     }
 
-    function renderOBReal(bids, asks) {
-        const askDiv = document.getElementById('asks'); 
-        const bidDiv = document.getElementById('bids');
-        if(!askDiv || !bidDiv) return;
+    function addLog(m, flash=false) {
+        const time = new Date().toLocaleTimeString();
+        const msg = `[${time}] ${m}`;
+        state.logs.unshift(msg);
+        if(state.logs.length > 50) state.logs.pop();
+        renderLogs();
+        save();
+    }
 
-        askDiv.innerHTML = asks.slice(0, 8).map(a => `
-            <div class="ob-row" style="color:var(--neg)">
-                <span>${parseFloat(a[0]).toFixed(2)}</span>
-                <span>${parseFloat(a[1]).toFixed(4)}</span>
-            </div>`).join('');
+    function renderLogs() {
+        const l = document.getElementById('trade-log');
+        if(l) l.innerText = state.logs.join('\n');
+    }
 
-        bidDiv.innerHTML = bids.slice(0, 8).map(b => `
-            <div class="ob-row" style="color:var(--pos)">
-                <span>${parseFloat(b[0]).toFixed(2)}</span>
-                <span>${parseFloat(b[1]).toFixed(4)}</span>
-            </div>`).join('');
+    // Standard Handlers
+    function initTradingView() {
+        if (document.getElementById('tv_frame')) {
+            new TradingView.widget({
+                "autosize": true, "symbol": "BINANCE:" + state.active,
+                "interval": "15", "timezone": "Etc/UTC", "theme": state.theme,
+                "style": "1", "locale": "en", "container_id": "tv_frame"
+            });
+        }
     }
 
     function updateWalletStats(pnl, margin) {
@@ -315,7 +329,6 @@
         for (const [coin, amt] of Object.entries(state.balances)) {
             assetValue += amt * (prices[coin + 'USDT'] || (coin === 'USDT' ? 1 : 0));
         }
-
         const equity = assetValue + pnl;
         const eqEl = document.getElementById('w-equity');
         if(eqEl) {
@@ -325,28 +338,15 @@
             document.getElementById('w-pnl').innerText = `${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toFixed(2)}`;
             document.getElementById('w-pnl').style.color = pnl >= 0 ? 'var(--pos)' : 'var(--neg)';
         }
-        
-        const hChange = document.getElementById('h-change');
-        if(hChange) {
-            const perc = ((pnl/42050)*100).toFixed(2);
-            hChange.innerText = (pnl >= 0 ? '+' : '') + perc + '%';
-            hChange.style.color = pnl >= 0 ? 'var(--pos)' : 'var(--neg)';
-        }
     }
 
     function renderWallet() {
         const grid = document.getElementById('asset-grid');
         const hist = document.getElementById('tx-history');
-        if(!grid) return;
-
-        grid.innerHTML = '';
-        Object.keys(state.balances).forEach(coin => {
-            const price = prices[coin+'USDT'] || 1;
-            const bal = state.balances[coin];
-            const usd = (bal * price).toLocaleString(undefined, {minimumFractionDigits:2});
-            
-            grid.innerHTML += `
-                <div class="coin-card">
+        if(grid) {
+            grid.innerHTML = Object.keys(state.balances).map(coin => {
+                const price = prices[coin+'USDT'] || 1;
+                return `<div class="coin-card">
                     <div class="coin-head">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <div class="coin-icon">${coin[0]}</div>
@@ -354,76 +354,28 @@
                         </div>
                         <div style="text-align:right; font-size:12px; font-weight:700;">$${price.toLocaleString()}</div>
                     </div>
-                    <div style="font-family:var(--font-mono); font-size:18px; font-weight:700;">${bal}</div>
-                    <div style="font-size:11px; color:var(--dim);">$${usd}</div>
+                    <div style="font-family:var(--font-mono); font-size:18px; font-weight:700;">${state.balances[coin]}</div>
                 </div>`;
-        });
-
+            }).join('');
+        }
         if(hist) hist.innerHTML = state.history.map(t => `
-            <tr>
-                <td>${t.date}</td>
-                <td>${t.coin}</td>
-                <td style="color:${t.type==='Deposit' || t.type==='Purchase' ?'var(--pos)':'var(--accent)'}">${t.type}</td>
-                <td>${t.amount}</td>
-                <td>$${t.val}</td>
-                <td style="color:var(--pos)">${t.status}</td>
-            </tr>`).join('');
+            <tr><td>${t.date}</td><td>${t.coin}</td><td>${t.type}</td><td>${t.amount}</td><td>$${t.val}</td><td style="color:var(--pos)">${t.status}</td></tr>
+        `).join('');
     }
 
     function exec(side) {
         const qty = parseFloat(document.getElementById('trade-qty').value);
         const price = prices[state.active];
-        if(!qty || !price) return;
-        
+        if(!qty) return;
         state.positions.push({ id: Date.now(), sym: state.active, side, qty, entry: price });
-        addLog(`MARKET ${side.toUpperCase()}: ${qty} ${state.active} @ $${price}`, true);
+        addLog(`ORDER FILLED: ${side.toUpperCase()} ${qty} ${state.active} @ $${price}`);
         save();
     }
 
     function closePos(id) {
-        const pos = state.positions.find(p => p.id === id);
-        if(!pos) return;
-        const mark = prices[pos.sym] || pos.entry;
-        const pnl = pos.side === 'long' ? (mark - pos.entry) * pos.qty : (pos.entry - mark) * pos.qty;
-        state.balances.USDT += pnl;
         state.positions = state.positions.filter(p => p.id !== id);
+        addLog("Position manually liquidated.");
         save();
-        renderWallet();
-        addLog(`CLOSED ${pos.sym} for ${pnl >= 0 ? 'Profit' : 'Loss'} of $${Math.abs(pnl).toFixed(2)}`);
-    }
-
-    function initCharts() {
-        const aCtx = document.getElementById('alloc-chart');
-        if(!aCtx) return;
-        new Chart(aCtx.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['BTC', 'ETH', 'SOL', 'USDT'],
-                datasets: [{
-                    data: [45, 25, 15, 15],
-                    backgroundColor: ['#f7931a', '#627eea', '#14f195', '#26a17b'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#707a8a', font: { size: 10 } } } }, cutout: '70%' }
-        });
-    }
-
-    function showSection(id, el) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('view-'+id).classList.add('active');
-        el.classList.add('active');
-    }
-
-    function toggleTheme() {
-        state.theme = state.theme === 'dark' ? 'light' : 'dark';
-        save();
-        location.reload();
-    }
-
-    function applyTheme(t) {
-        document.body.setAttribute('data-theme', t);
     }
 
     function initMarkets() {
@@ -435,11 +387,8 @@
             div.id = 'row-'+a;
             div.onclick = () => {
                 state.active = a;
-                document.querySelectorAll('.m-row').forEach(r => r.classList.remove('active'));
-                div.classList.add('active');
                 save();
-                initTradingView(); // Live update chart
-                // location.reload(); // Uncomment if you want to hard reset the stream
+                location.reload(); 
             };
             div.innerHTML = `<span>${a.replace('USDT','')}</span><div style="text-align:right"><div class="p-val">---</div><div class="p-chg" style="font-size:10px;">0%</div></div>`;
             list.appendChild(div);
@@ -455,31 +404,27 @@
             chg.style.color = d.P >= 0 ? 'var(--pos)' : 'var(--neg)';
         }
         if(d.s === state.active) {
-            const midPrice = document.getElementById('mid-price');
-            if(midPrice) midPrice.innerText = parseFloat(d.c).toLocaleString();
-            
-            const hVol = document.getElementById('h-vol');
-            if(hVol) hVol.innerText = (parseFloat(d.q)/1000000).toFixed(2) + 'M';
-            
-            const hPair = document.getElementById('h-pair');
-            if(hPair) hPair.innerText = d.s.replace('USDT','') + ' / USDT';
+            document.getElementById('mid-price').innerText = parseFloat(d.c).toLocaleString();
+            document.getElementById('h-vol').innerText = (parseFloat(d.q)/1000000).toFixed(2) + 'M';
+            document.getElementById('h-pair').innerText = d.s.replace('USDT','') + ' / USDT';
         }
     }
 
-    function addLog(m, flash=false) {
-        const l = document.getElementById('trade-log');
-        if(!l) return;
-        const entry = document.createElement('div');
-        if(flash) entry.style.color = 'var(--accent)';
-        entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${m}`;
-        l.prepend(entry);
+    function initCharts() {
+        const aCtx = document.getElementById('alloc-chart');
+        if(aCtx) new Chart(aCtx.getContext('2d'), { type: 'doughnut', data: { labels: ['BTC', 'ETH', 'SOL', 'USDT'], datasets: [{ data: [45, 25, 15, 15], backgroundColor: ['#f7931a', '#627eea', '#14f195', '#26a17b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
     }
 
-    function updateTime() {
-        const clock = document.getElementById('clock');
-        if(clock) clock.innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC';
+    function showSection(id, el) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('view-'+id).classList.add('active');
+        el.classList.add('active');
     }
 
+    function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); location.reload(); }
+    function applyTheme(t) { document.body.setAttribute('data-theme', t); }
+    function updateTime() { document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC'; }
     function save() { localStorage.setItem('orion_pro_v10', JSON.stringify(state)); }
 </script>
 </body>
