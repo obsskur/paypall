@@ -1,567 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orion Crypto Terminal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORION // Terminal v2.0</title>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #050608;
+            --panel: rgba(18, 22, 33, 0.7);
+            --accent: #3d7eff;
+            --accent-glow: rgba(61, 126, 255, 0.4);
+            --pos: #00ffaa;
+            --neg: #ff3e3e;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e1e1e6;
+        }
 
-<script src="https://s3.tradingview.com/tv.js"></script>
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
 
-<style>
-    :root {
-        --bg-main: #0b0e14;
-        --bg-panel: #131722;
-        --bg-card: #1e222d;
-        --border: #2a2e39;
-        --text-main: #d1d4dc;
-        --text-muted: #787b86;
-        --accent: #2962ff;
-        --accent-hover: #1e53e5;
-        --positive: #089981;
-        --negative: #f23645;
-    }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% -20%, #1a233a 0%, #050608 60%);
+        }
 
-    body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--bg-main);
-        color: var(--text-main);
-        display: flex;
-        height: 100vh;
-        overflow: hidden;
-    }
+        /* Sidebar Glassmorphism */
+        .sidebar {
+            width: 280px;
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
 
-    /* Sidebar */
-    .sidebar {
-        width: 260px;
-        background: var(--bg-panel);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-    }
+        .logo {
+            padding: 40px 30px;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
 
-    .logo {
-        font-size: 20px;
-        font-weight: 700;
-        padding: 24px;
-        color: white;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid var(--border);
-    }
+        .logo span { color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
 
-    .logo span { color: var(--accent); }
+        .nav-group { padding: 0 15px; flex: 1; }
 
-    .menu { padding: 16px; flex: 1; }
+        .nav-btn {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #666;
+            padding: 14px 20px;
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .menu button {
-        width: 100%;
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        text-align: left;
-        padding: 12px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        transition: all 0.2s ease;
-    }
+        .nav-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
 
-    .menu button:hover, .menu button.active {
-        background: var(--bg-card);
-        color: white;
-    }
+        .nav-btn.active {
+            background: rgba(61, 126, 255, 0.1);
+            color: var(--accent);
+            box-shadow: inset 0 0 0 1px var(--accent);
+        }
 
-    /* Main Content */
-    .main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: var(--bg-main);
-    }
+        /* Main Viewport */
+        .viewport { flex: 1; display: flex; flex-direction: column; position: relative; }
 
-    .topbar {
-        padding: 20px 32px;
-        border-bottom: 1px solid var(--border);
-        background: var(--bg-panel);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+        .top-nav {
+            height: 100px;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
 
-    .portfolio-header h1 {
-        margin: 0;
-        font-size: 28px;
-        color: white;
-    }
+        .stats-display { display: flex; gap: 40px; }
+        .stat-item label { display: block; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 1px; }
+        .stat-item span { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; }
 
-    .portfolio-header p {
-        margin: 4px 0 0 0;
-        color: var(--text-muted);
-        font-size: 14px;
-    }
+        .content-area { padding: 40px; overflow-y: auto; height: calc(100vh - 100px); }
 
-    .content {
-        padding: 32px;
-        overflow-y: auto;
-        flex: 1;
-    }
+        /* Premium Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .card {
-        background: var(--bg-card);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
 
-    h3 {
-        margin-top: 0;
-        margin-bottom: 20px;
-        color: white;
-        font-size: 18px;
-        font-weight: 600;
-    }
+        /* Animations */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    /* Tables */
-    table { width: 100%; border-collapse: collapse; }
-    th {
-        text-align: left;
-        color: var(--text-muted);
-        font-weight: 500;
-        font-size: 13px;
-        text-transform: uppercase;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--border);
-    }
-    td {
-        padding: 16px 0;
-        border-bottom: 1px solid var(--border);
-        font-size: 15px;
-    }
-    tr:last-child td { border-bottom: none; }
+        .tab-content { animation: slideUp 0.4s ease forwards; }
 
-    /* Forms & Buttons */
-    .trade-form {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr auto;
-        gap: 16px;
-        align-items: end;
-    }
+        .price-up { color: var(--pos) !important; text-shadow: 0 0 10px rgba(0, 255, 170, 0.2); }
+        .price-down { color: var(--neg) !important; text-shadow: 0 0 10px rgba(255, 62, 62, 0.2); }
 
-    .input-group { display: flex; flex-direction: column; }
-    .input-group label {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-bottom: 8px;
-    }
+        /* Tables & Inputs */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #444; font-size: 12px; padding-bottom: 15px; }
+        td { padding: 18px 0; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; }
 
-    input, select {
-        background: var(--bg-main);
-        border: 1px solid var(--border);
-        color: white;
-        padding: 10px 12px;
-        border-radius: 6px;
-        font-size: 14px;
-        outline: none;
-    }
+        .btn-trade {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
 
-    input:focus, select:focus { border-color: var(--accent); }
+        .btn-trade:active { transform: scale(0.96); }
 
-    button.btn {
-        background: var(--accent);
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.2s;
-        height: 40px;
-    }
+        .input-dark {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono';
+        }
 
-    button.btn:hover { background: var(--accent-hover); }
-    button.btn-sell { background: var(--negative); }
-    button.btn-sell:hover { background: #d92b3a; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-    /* Utilities */
-    .hidden { display: none !important; }
-    .positive { color: var(--positive); }
-    .negative { color: var(--negative); }
-    .toast {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-        transition: opacity 0.3s;
-        z-index: 1000;
-    }
-</style>
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="logo">Orion <span>Terminal</span></div>
-    <div class="menu">
-        <button class="nav-btn active" onclick="showTab('wallet', this)">Portfolio</button>
-        <button class="nav-btn" onclick="showTab('trade', this)">Trade (Simulator)</button>
-        <button class="nav-btn" onclick="showTab('chart', this)">Live Charts</button>
-        <button class="nav-btn" onclick="showTab('market', this)">Market Data</button>
-        <button class="nav-btn" onclick="showTab('alerts', this)">Price Alerts</button>
+<aside class="sidebar">
+    <div class="logo">ORION<span>//TERMINAL</span></div>
+    <div class="nav-group">
+        <button class="nav-btn active" onclick="switchTab('dashboard', this)">
+            <i>▣</i> Dashboard
+        </button>
+        <button class="nav-btn" onclick="switchTab('exchange', this)">
+            <i>◈</i> Exchange
+        </button>
+        <button class="nav-btn" onclick="switchTab('market', this)">
+            <i>📈</i> Market
+        </button>
     </div>
-</div>
-
-<div class="main">
-    <div class="topbar">
-        <div class="portfolio-header">
-            <h1 id="totalValue">$0.00</h1>
-            <p>Available Cash: <span id="cashBalance">$100,000.00</span></p>
+    <div style="padding: 20px; border-top: 1px solid var(--border)">
+        <div class="stat-item">
+            <label>Connection</label>
+            <span id="ws-status" style="font-size: 12px; color: var(--pos)">● LIVE WEBSOCKET</span>
         </div>
     </div>
+</aside>
 
-    <div class="content">
-        <div id="wallet" class="tab-content">
+<main class="viewport">
+    <header class="top-nav">
+        <div class="stats-display">
+            <div class="stat-item">
+                <label>Total Net Worth</label>
+                <span id="total-val">$0.00</span>
+            </div>
+            <div class="stat-item">
+                <label>Buying Power</label>
+                <span id="cash-val" style="color: #aaa;">$100,000.00</span>
+            </div>
+        </div>
+        <div class="stat-item" style="text-align: right;">
+            <label>Current UTC</label>
+            <span id="clock" style="font-size: 14px;">00:00:00</span>
+        </div>
+    </header>
+
+    <div class="content-area">
+        <div id="dashboard" class="tab-content">
             <div class="card">
-                <h3>Your Assets</h3>
-                <table>
+                <h3 style="margin:0">Active Positions</h3>
+                <table id="portfolio-table">
                     <thead>
-                        <tr>
-                            <th>Asset</th>
-                            <th>Holdings</th>
-                            <th>Current Price</th>
-                            <th>Total Value</th>
-                            <th>Unrealized P/L</th>
-                        </tr>
+                        <tr><th>Asset</th><th>Balance</th><th>Entry</th><th>Market Price</th><th>Unrealized P/L</th></tr>
                     </thead>
-                    <tbody id="portfolioTable">
-                        </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
 
-        <div id="trade" class="tab-content hidden">
-            <div class="card">
-                <h3>Execute Trade</h3>
-                <div class="trade-form">
-                    <div class="input-group">
-                        <label>Select Asset</label>
-                        <select id="tradeCoin">
-                            <option value="bitcoin">Bitcoin (BTC)</option>
-                            <option value="ethereum">Ethereum (ETH)</option>
-                            <option value="solana">Solana (SOL)</option>
-                        </select>
+        <div id="exchange" class="tab-content hidden">
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px;">
+                <div class="card">
+                    <div id="tradingview_chart" style="height: 500px;"></div>
+                </div>
+                <div class="card">
+                    <h3>Terminal Order</h3>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Instrument</label>
+                            <select id="trade-coin" class="input-dark" style="width:100%; margin-top:5px;">
+                                <option value="bitcoin">Bitcoin / USDT</option>
+                                <option value="ethereum">Ethereum / USDT</option>
+                                <option value="solana">Solana / USDT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #666;">Size</label>
+                            <input type="number" id="trade-amt" class="input-dark" style="width:100%; margin-top:5px;" placeholder="0.00">
+                        </div>
+                        <button class="btn-trade" onclick="handleTrade('buy')">Execute Buy</button>
+                        <button class="btn-trade" style="background: transparent; border: 1px solid var(--neg); color: var(--neg); box-shadow: none;" onclick="handleTrade('sell')">Liquidate</button>
                     </div>
-                    <div class="input-group">
-                        <label>Amount</label>
-                        <input type="number" id="tradeAmount" placeholder="0.00" step="any">
-                    </div>
-                    <div class="input-group">
-                        <label>Estimated Value</label>
-                        <input type="text" id="tradeEst" disabled value="$0.00">
-                    </div>
-                    <div>
-                        <button class="btn" onclick="executeTrade('buy')">Buy</button>
-                        <button class="btn btn-sell" onclick="executeTrade('sell')">Sell</button>
+                    <div style="margin-top: 30px;">
+                        <label style="font-size: 11px; color: #444;">FEE RATE: 0.1%</label>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div id="chart" class="tab-content hidden">
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div id="tradingview_chart" style="height:600px;"></div>
             </div>
         </div>
 
         <div id="market" class="tab-content hidden">
             <div class="card">
-                <h3>Top Cryptocurrencies</h3>
-                <table>
+                <h3>Global Market (Top 50)</h3>
+                <table id="market-table">
                     <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Asset</th>
-                            <th>Price</th>
-                            <th>24h Change</th>
-                            <th>Market Cap</th>
-                        </tr>
+                        <tr><th>#</th><th>Asset</th><th>Price</th><th>24h %</th><th>Volume</th></tr>
                     </thead>
-                    <tbody id="marketTable">
-                        <tr><td colspan="5">Loading market data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="alerts" class="tab-content hidden">
-            <div class="card">
-                <h3>Set Price Alert</h3>
-                <div class="trade-form" style="grid-template-columns: 1fr 1fr auto;">
-                    <div class="input-group">
-                        <label>Coin ID (e.g., bitcoin)</label>
-                        <input id="alertCoin" placeholder="bitcoin" value="bitcoin">
-                    </div>
-                    <div class="input-group">
-                        <label>Target Price (USD)</label>
-                        <input type="number" id="alertPrice" placeholder="50000">
-                    </div>
-                    <div>
-                        <button class="btn" onclick="addAlert()">Create Alert</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <h3>Active Alerts</h3>
-                <table id="alertTable">
-                    <thead><tr><th>Asset</th><th>Target Price</th><th>Status</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <script>
-// --- STATE MANAGEMENT ---
-let state = {
-    cash: 100000,
-    portfolio: {
-        'bitcoin': { amount: 0.5, avgPrice: 42000 },
-        'ethereum': { amount: 4.0, avgPrice: 2200 }
-    },
-    prices: {},
-    alerts: []
-};
+    // --- STATE & ENGINE ---
+    let engine = {
+        cash: 100000,
+        portfolio: JSON.parse(localStorage.getItem('orion_assets')) || {
+            'bitcoin': { amt: 0.5, entry: 45000 },
+            'ethereum': { amt: 2.5, entry: 2400 }
+        },
+        prices: { bitcoin: 0, ethereum: 0, solana: 0 },
+        prevPrices: {}
+    };
 
-// --- FORMATTERS ---
-const fmtCurrency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-const fmtPct = new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 2 });
+    const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-// --- NAVIGATION ---
-function showTab(id, btnElement) {
-    document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-    document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
-    document.getElementById(id).classList.remove("hidden");
-    btnElement.classList.add("active");
-}
-
-// --- DATA FETCHING ---
-async function fetchPrices() {
-    try {
-        const ids = Object.keys(state.portfolio).concat(['solana']).join(',');
-        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-        const data = await res.json();
-        
-        for (const [coin, val] of Object.entries(data)) {
-            state.prices[coin] = val.usd;
-        }
-        updateDashboard();
-        checkAlerts();
-    } catch (err) {
-        console.error("Failed to fetch prices:", err);
+    // --- REALTIME SOCKET ---
+    function initStream() {
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade/ethusdt@trade/solusdt@trade');
+        ws.onmessage = (e) => {
+            const d = JSON.parse(e.data);
+            const map = { 'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'SOLUSDT': 'solana' };
+            const coin = map[d.s];
+            engine.prevPrices[coin] = engine.prices[coin];
+            engine.prices[coin] = parseFloat(d.p);
+            refreshUI();
+        };
     }
-}
 
-async function loadMarket() {
-    try {
-        // Limited to 100 to avoid aggressive rate limiting on free tier
-        const res = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false");
-        const data = await res.json();
+    function refreshUI() {
+        document.getElementById('cash-val').innerText = currency.format(engine.cash);
+        let net = engine.cash;
         
-        const tbody = document.getElementById("marketTable");
-        tbody.innerHTML = "";
-        
-        data.forEach(coin => {
-            const isPos = coin.price_change_percentage_24h >= 0;
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${coin.market_cap_rank}</td>
-                <td style="display:flex; align-items:center; gap:8px;">
-                    <img src="${coin.image}" style="width:20px;height:20px;">
-                    ${coin.name} <span style="color:var(--text-muted);font-size:12px;">${coin.symbol.toUpperCase()}</span>
-                </td>
-                <td>${fmtCurrency.format(coin.current_price)}</td>
-                <td class="${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}${coin.price_change_percentage_24h.toFixed(2)}%</td>
-                <td>${fmtCurrency.format(coin.market_cap)}</td>
+        const tbody = document.querySelector('#portfolio-table tbody');
+        tbody.innerHTML = '';
+
+        for (const [id, data] of Object.entries(engine.portfolio)) {
+            const price = engine.prices[id] || data.entry;
+            const val = data.amt * price;
+            net += val;
+
+            const pl = val - (data.amt * data.entry);
+            const moveClass = price > engine.prevPrices[id] ? 'price-up' : 'price-down';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-transform: capitalize; font-weight:700">${id}</td>
+                    <td>${data.amt.toFixed(4)}</td>
+                    <td>${currency.format(data.entry)}</td>
+                    <td class="${moveClass}">${currency.format(price)}</td>
+                    <td style="color: ${pl >= 0 ? 'var(--pos)' : 'var(--neg)'}">${currency.format(pl)}</td>
+                </tr>
             `;
-            tbody.appendChild(tr);
-        });
-    } catch (err) {
-        document.getElementById("marketTable").innerHTML = `<tr><td colspan="5">Rate limit exceeded. Try again later.</td></tr>`;
-    }
-}
-
-// --- CORE LOGIC ---
-function updateDashboard() {
-    let totalCryptoValue = 0;
-    const tbody = document.getElementById("portfolioTable");
-    tbody.innerHTML = "";
-
-    document.getElementById("cashBalance").innerText = fmtCurrency.format(state.cash);
-
-    for (const [coinId, position] of Object.entries(state.portfolio)) {
-        if (position.amount <= 0) continue;
-        
-        const currentPrice = state.prices[coinId] || 0;
-        const value = position.amount * currentPrice;
-        const plValue = value - (position.amount * position.avgPrice);
-        const plPct = (currentPrice - position.avgPrice) / position.avgPrice;
-        
-        totalCryptoValue += value;
-
-        const isPos = plValue >= 0;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td style="text-transform: capitalize;">${coinId}</td>
-            <td>${position.amount.toFixed(4)}</td>
-            <td>${fmtCurrency.format(currentPrice)}</td>
-            <td>${fmtCurrency.format(value)}</td>
-            <td class="${isPos ? 'positive' : 'negative'}">
-                ${isPos ? '+' : ''}${fmtCurrency.format(plValue)} (${fmtPct.format(plPct)})
-            </td>
-        `;
-        tbody.appendChild(tr);
-    }
-
-    const netWorth = state.cash + totalCryptoValue;
-    document.getElementById("totalValue").innerText = fmtCurrency.format(netWorth);
-    updateTradeEst();
-}
-
-// --- TRADING SYSTEM ---
-document.getElementById('tradeAmount').addEventListener('input', updateTradeEst);
-document.getElementById('tradeCoin').addEventListener('change', updateTradeEst);
-
-function updateTradeEst() {
-    const coin = document.getElementById('tradeCoin').value;
-    const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
-    const price = state.prices[coin] || 0;
-    document.getElementById('tradeEst').value = fmtCurrency.format(amount * price);
-}
-
-function executeTrade(type) {
-    const coin = document.getElementById('tradeCoin').value;
-    const amount = parseFloat(document.getElementById('tradeAmount').value);
-    
-    if (!amount || amount <= 0) return alert("Enter a valid amount");
-    if (!state.prices[coin]) return alert("Waiting for price data...");
-
-    const price = state.prices[coin];
-    const value = amount * price;
-
-    if (!state.portfolio[coin]) state.portfolio[coin] = { amount: 0, avgPrice: 0 };
-
-    if (type === 'buy') {
-        if (state.cash < value) return alert("Insufficient USD balance");
-        
-        // Calculate new average price
-        const prevValue = state.portfolio[coin].amount * state.portfolio[coin].avgPrice;
-        const newValue = prevValue + value;
-        const newAmount = state.portfolio[coin].amount + amount;
-        
-        state.cash -= value;
-        state.portfolio[coin].amount = newAmount;
-        state.portfolio[coin].avgPrice = newValue / newAmount;
-        
-        showToast(`Bought ${amount} ${coin} for ${fmtCurrency.format(value)}`);
-    } else {
-        if (state.portfolio[coin].amount < amount) return alert("Insufficient crypto balance");
-        
-        state.cash += value;
-        state.portfolio[coin].amount -= amount;
-        
-        // Clean up empty positions
-        if (state.portfolio[coin].amount <= 0.000001) delete state.portfolio[coin];
-        
-        showToast(`Sold ${amount} ${coin} for ${fmtCurrency.format(value)}`);
-    }
-    
-    document.getElementById('tradeAmount').value = '';
-    updateDashboard();
-}
-
-// --- ALERTS ---
-function addAlert() {
-    const coin = document.getElementById("alertCoin").value.toLowerCase();
-    const price = parseFloat(document.getElementById("alertPrice").value);
-    
-    if(!coin || !price) return;
-
-    state.alerts.push({ coin, target: price, active: true });
-    
-    // Force fetch price for new coin if not tracked
-    if(!state.prices[coin]) fetchPrices();
-    
-    renderAlerts();
-    document.getElementById("alertPrice").value = '';
-}
-
-function renderAlerts() {
-    const tbody = document.querySelector("#alertTable tbody");
-    tbody.innerHTML = "";
-    
-    state.alerts.forEach((alert, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td style="text-transform: capitalize;">${alert.coin}</td>
-            <td>${fmtCurrency.format(alert.target)}</td>
-            <td class="${alert.active ? 'positive' : 'text-muted'}">${alert.active ? 'Monitoring' : 'Triggered'}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function checkAlerts() {
-    state.alerts.forEach(alert => {
-        if (!alert.active || !state.prices[alert.coin]) return;
-        
-        // Basic crossover logic: if target is near current price
-        if (state.prices[alert.coin] >= alert.target) {
-            showToast(`ALERT: ${alert.coin} reached ${fmtCurrency.format(alert.target)}!`);
-            alert.active = false;
-            renderAlerts();
         }
+        document.getElementById('total-val').innerText = currency.format(net);
+    }
+
+    // --- SYSTEMS ---
+    function switchTab(id, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.remove('hidden');
+        el.classList.add('active');
+        if(id === 'market') loadMarketData();
+    }
+
+    async function loadMarketData() {
+        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50');
+        const data = await res.json();
+        const tbody = document.querySelector('#market-table tbody');
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td>${c.market_cap_rank}</td>
+                <td>${c.name}</td>
+                <td>${currency.format(c.current_price)}</td>
+                <td style="color: ${c.price_change_percentage_24h >= 0 ? 'var(--pos)' : 'var(--neg)'}">${c.price_change_percentage_24h.toFixed(2)}%</td>
+                <td style="color:#666">${currency.format(c.total_volume)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function handleTrade(type) {
+        const coin = document.getElementById('trade-coin').value;
+        const amt = parseFloat(document.getElementById('trade-amt').value);
+        const price = engine.prices[coin];
+
+        if(!amt || !price) return;
+
+        const total = amt * price;
+        const fee = total * 0.001;
+
+        if(type === 'buy') {
+            if(engine.cash < (total + fee)) return alert("INSUFFICIENT FUNDS");
+            engine.cash -= (total + fee);
+            if(!engine.portfolio[coin]) engine.portfolio[coin] = { amt: 0, entry: 0 };
+            
+            // Average entry price logic
+            const oldVal = engine.portfolio[coin].amt * engine.portfolio[coin].entry;
+            engine.portfolio[coin].amt += amt;
+            engine.portfolio[coin].entry = (oldVal + total) / engine.portfolio[coin].amt;
+        } else {
+            if(!engine.portfolio[coin] || engine.portfolio[coin].amt < amt) return alert("INSUFFICIENT ASSETS");
+            engine.cash += (total - fee);
+            engine.portfolio[coin].amt -= amt;
+            if(engine.portfolio[coin].amt <= 0) delete engine.portfolio[coin];
+        }
+
+        localStorage.setItem('orion_assets', JSON.stringify(engine.portfolio));
+        document.getElementById('trade-amt').value = '';
+        refreshUI();
+    }
+
+    // --- INIT ---
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toUTCString().split(' ')[4];
+    }, 1000);
+
+    new TradingView.widget({
+        "container_id": "tradingview_chart",
+        "autosize": true,
+        "symbol": "BINANCE:BTCUSDT",
+        "interval": "D",
+        "theme": "dark",
+        "style": "1",
+        "backgroundColor": "rgba(5, 6, 8, 1)",
+        "gridColor": "rgba(255, 255, 255, 0.05)",
+        "hide_side_toolbar": false
     });
-}
 
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerText = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// --- INITIALIZATION ---
-new TradingView.widget({
-    container_id: "tradingview_chart",
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "60",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    enable_publishing: false,
-    backgroundColor: "#1e222d",
-    gridColor: "#2a2e39",
-    hide_top_toolbar: false,
-    save_image: false
-});
-
-fetchPrices();
-loadMarket();
-setInterval(fetchPrices, 15000); // Check prices every 15s
-
+    initStream();
 </script>
 </body>
 </html>
