@@ -549,6 +549,60 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
   background:none; border:none; outline:none; color:var(--text0);
   font-family:var(--mono); font-size:12px; flex:1; min-width:0;
 }
+
+/* ───────── CONVERT PAGE ───────── */
+.conv-pct-btn {
+  flex:1; padding:7px 0; border-radius:6px; border:1px solid var(--border);
+  background:transparent; color:var(--text1); font-size:11px; font-weight:600;
+  cursor:pointer; font-family:var(--sans); transition:all .12s;
+}
+.conv-pct-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.04); }
+
+/* Coin picker option */
+.conv-coin-option {
+  display:flex; align-items:center; gap:10px; padding:10px 16px;
+  cursor:pointer; transition:background .1s;
+}
+.conv-coin-option:hover { background:var(--bg3); }
+.conv-coin-option.disabled { opacity:.35; pointer-events:none; }
+.conv-coin-sym { font-size:12px; font-weight:600; min-width:36px; }
+.conv-coin-name { font-size:11px; color:var(--text2); flex:1; }
+.conv-coin-bal { font-size:11px; font-family:var(--mono); color:var(--text1); }
+
+/* Conversion history item */
+.conv-hist-item {
+  display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.conv-hist-item:last-child { border-bottom:none; }
+
+/* ───────── FLOWING ORDER BOOK ───────── */
+.ob-row { position:relative; }
+.ob-bg { position:absolute; right:0; top:0; height:100%; opacity:.15; transition:width .3s ease; }
+.ob-row-flash-pos { animation:flashGreen .4s ease; }
+.ob-row-flash-neg { animation:flashRed .4s ease; }
+@keyframes flashGreen { 0%{background:rgba(0,200,150,.25)} 100%{background:transparent} }
+@keyframes flashRed { 0%{background:rgba(255,77,109,.25)} 100%{background:transparent} }
+
+/* ───────── MARKET TAB CONTENT ───────── */
+#market-futures-list, #market-favs-list { display:none; }
+.mrow-star {
+  width:16px; height:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--text2); cursor:pointer; font-size:13px; flex-shrink:0;
+  transition:color .12s;
+}
+.mrow-star.starred { color:#f0b429; }
+.futures-badge {
+  font-size:8px; font-weight:700; color:#f0b429; background:rgba(240,180,41,.12);
+  border:1px solid rgba(240,180,41,.2); border-radius:3px; padding:1px 4px;
+  margin-left:4px; vertical-align:middle; letter-spacing:.3px;
+}
+
+/* Dev menu wallet balance row */
+.dev-wallet-total {
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:12px 14px; display:flex; align-items:center; justify-content:space-between;
+}
 </style>
 </head>
 <body>
@@ -566,8 +620,8 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     <button class="nav-btn" id="btn-wallet" onclick="switchView('wallet')" title="Portfolio">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
     </button>
-    <button class="nav-btn" id="btn-orders" onclick="switchView('orders')" title="Orders">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <button class="nav-btn" id="btn-convert" onclick="switchView('convert')" title="Convert">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
     </button>
     <div class="nav-spacer"></div>
     <button class="nav-btn" onclick="toggleTheme()" title="Theme">
@@ -600,7 +654,6 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     </div>
     <div class="topbar-right">
       <span id="clock">00:00:00 UTC</span>
-      <button class="btn-small btn-outline" onclick="switchView('wallet')">Portfolio</button>
     </div>
   </header>
 
@@ -610,9 +663,9 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
       <input type="text" id="market-search-inp" placeholder="&#128269; Search markets..." oninput="filterMarkets(this.value)">
     </div>
     <div class="market-tabs">
-      <div class="mt active">Spot</div>
-      <div class="mt">Futures</div>
-      <div class="mt">&#9733;</div>
+      <div class="mt active" onclick="switchMarketTab(this,'spot')">Spot</div>
+      <div class="mt" onclick="switchMarketTab(this,'futures')">Futures</div>
+      <div class="mt" onclick="switchMarketTab(this,'favs')">&#9733;</div>
     </div>
     <div id="market-list"></div>
   </aside>
@@ -656,7 +709,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     </div>
     <div class="pos-pnl-bar">
       <div class="pnl-item"><span class="pnl-label">Unrealized PNL:</span><span class="pnl-val" id="upnl">+$0.00</span></div>
-      <div class="pnl-item"><span class="pnl-label">Realized PNL:</span><span class="pnl-val" id="rpnl" style="color:var(--pos)">+$841.20</span></div>
+      <div class="pnl-item"><span class="pnl-label">Realized PNL:</span><span class="pnl-val" id="rpnl" style="color:var(--pos)">+$312.40</span></div>
       <div class="pnl-item" style="margin-left:auto;"><span class="pnl-label">Maint. Margin:</span><span class="pnl-val" id="mratio">—</span></div>
     </div>
     <div id="pos-scroll">
@@ -1163,6 +1216,139 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     </div>
   </div>
 
+  <!-- CONVERT / TRANSFER VIEW -->
+  <section id="view-convert" style="display:none; grid-column:2/5; grid-row:1/4; overflow-y:auto; background:var(--bg0);">
+    <div style="max-width:520px; margin:0 auto; padding:32px 20px 60px;">
+
+      <!-- Header -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:28px;">
+        <button onclick="switchView('trade')" class="profile-back" title="Back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div style="font-size:15px; font-weight:700;">Convert</div>
+          <div style="font-size:11px; color:var(--text2); margin-top:1px;">Swap between assets instantly</div>
+        </div>
+      </div>
+
+      <!-- Convert card -->
+      <div style="background:var(--bg1); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+
+        <!-- From -->
+        <div style="padding:16px 18px; border-bottom:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:11px; color:var(--text2);">From</span>
+            <span style="font-size:11px; color:var(--text2);">Available: <span id="conv-from-avail" style="color:var(--text0); font-family:var(--mono);">—</span></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div id="conv-from-selector" onclick="openConvCoinPicker('from')" style="display:flex; align-items:center; gap:8px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; cursor:pointer; transition:border-color .12s; flex-shrink:0; min-width:110px;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div id="conv-from-icon" style="width:24px; height:24px; border-radius:50%; background:#f7931a22; color:#f7931a; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">₿</div>
+              <div>
+                <div id="conv-from-coin" style="font-size:13px; font-weight:600; line-height:1.2;">BTC</div>
+                <div id="conv-from-name" style="font-size:9px; color:var(--text2);">Bitcoin</div>
+              </div>
+              <svg width="10" height="10" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div style="flex:1; position:relative;">
+              <input id="conv-amount-in" type="number" placeholder="0.00" oninput="convCalcOutput()" style="width:100%; background:transparent; border:none; outline:none; font-size:22px; font-weight:600; color:var(--text0); font-family:var(--mono); text-align:right;">
+            </div>
+          </div>
+          <div style="text-align:right; margin-top:4px; font-size:11px; color:var(--text2);" id="conv-in-fiat">≈ —</div>
+        </div>
+
+        <!-- Swap arrow -->
+        <div style="display:flex; justify-content:center; align-items:center; padding:0; position:relative; height:0; z-index:2;">
+          <button onclick="swapConvCoins()" style="width:32px; height:32px; border-radius:50%; background:var(--bg2); border:2px solid var(--border); color:var(--text1); cursor:pointer; display:flex; align-items:center; justify-content:center; position:absolute; top:-16px; transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text1)'">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+          </button>
+        </div>
+
+        <!-- To -->
+        <div style="padding:16px 18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:11px; color:var(--text2);">To</span>
+            <span style="font-size:11px; color:var(--text2);">Balance: <span id="conv-to-balance" style="color:var(--text0); font-family:var(--mono);">—</span></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div id="conv-to-selector" onclick="openConvCoinPicker('to')" style="display:flex; align-items:center; gap:8px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; cursor:pointer; transition:border-color .12s; flex-shrink:0; min-width:110px;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div id="conv-to-icon" style="width:24px; height:24px; border-radius:50%; background:#627eea22; color:#627eea; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">Ξ</div>
+              <div>
+                <div id="conv-to-coin" style="font-size:13px; font-weight:600; line-height:1.2;">ETH</div>
+                <div id="conv-to-name" style="font-size:9px; color:var(--text2);">Ethereum</div>
+              </div>
+              <svg width="10" height="10" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div style="flex:1; position:relative;">
+              <input id="conv-amount-out" type="number" placeholder="0.00" readonly style="width:100%; background:transparent; border:none; outline:none; font-size:22px; font-weight:600; color:var(--text2); font-family:var(--mono); text-align:right; cursor:default;">
+            </div>
+          </div>
+          <div style="text-align:right; margin-top:4px; font-size:11px; color:var(--text2);" id="conv-out-fiat">≈ —</div>
+        </div>
+      </div>
+
+      <!-- Rate info -->
+      <div id="conv-rate-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 2px; font-size:11px; color:var(--text2);">
+        <span id="conv-rate-label">1 BTC = — ETH</span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--pos); display:inline-block;"></span>
+          Live rate
+        </span>
+      </div>
+
+      <!-- Percentage quick select -->
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button class="conv-pct-btn" onclick="setConvPct(25)">25%</button>
+        <button class="conv-pct-btn" onclick="setConvPct(50)">50%</button>
+        <button class="conv-pct-btn" onclick="setConvPct(75)">75%</button>
+        <button class="conv-pct-btn" onclick="setConvPct(100)">MAX</button>
+      </div>
+
+      <!-- Fee breakdown -->
+      <div style="background:var(--bg1); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04);">
+          <span style="color:var(--text2);">Exchange Rate</span>
+          <span id="conv-summary-rate" style="font-family:var(--mono);">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); margin-top:4px;">
+          <span style="color:var(--text2);">Network Fee</span>
+          <span style="font-family:var(--mono); color:var(--text1);">0.1%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; padding:3px 0; margin-top:4px;">
+          <span style="color:var(--text2);">You will receive</span>
+          <span id="conv-receive-val" style="font-family:var(--mono); font-weight:600; color:var(--pos);">—</span>
+        </div>
+      </div>
+
+      <!-- Convert button -->
+      <button id="conv-btn" onclick="executeConvert()" style="width:100%; padding:14px; background:var(--accent); color:#000; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:var(--sans); transition:opacity .12s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        Preview Convert
+      </button>
+      <div style="text-align:center; font-size:10px; color:var(--text2); margin-top:10px;">Conversion executes at market rate · 0.1% fee applies</div>
+
+      <!-- Recent conversions -->
+      <div style="margin-top:28px;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); margin-bottom:10px;">Recent Conversions</div>
+        <div id="conv-history-list">
+          <div style="font-size:12px; color:var(--text2); padding:16px 0; text-align:center;">No conversions yet</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COIN PICKER MODAL -->
+  <div id="conv-coin-picker-overlay" onclick="if(event.target===this)closeConvCoinPicker()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:360px;max-width:95vw;max-height:75vh;display:flex;flex-direction:column;animation:modalIn .15s ease;">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div style="font-size:13px;font-weight:600;">Select Asset</div>
+        <button onclick="closeConvCoinPicker()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;">×</button>
+      </div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <input id="conv-coin-search" oninput="filterConvCoins(this.value)" placeholder="Search assets..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text0);font-size:12px;outline:none;box-sizing:border-box;">
+      </div>
+      <div id="conv-coin-list" style="overflow-y:auto;padding:6px 0;"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- TOAST CONTAINER -->
@@ -1177,7 +1363,7 @@ const PAIRS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAX
 const COIN_COLORS = { BTC:'#f7931a', ETH:'#627eea', SOL:'#14f195', BNB:'#f3ba2f', XRP:'#00aae4', ADA:'#0033ad', AVAX:'#e84142', DOT:'#e6007a', USDT:'#26a17b' };
 const COIN_LABELS = { BTC:'₿', ETH:'Ξ', SOL:'◎', BNB:'B', XRP:'✕', ADA:'A', AVAX:'▲', DOT:'●', USDT:'$' };
 
-let prices = { BTCUSDT:67420, ETHUSDT:3520, SOLUSDT:147, BNBUSDT:612, XRPUSDT:0.54, ADAUSDT:0.47, AVAXUSDT:38.5, DOTUSDT:8.20, USDTUSDT:1 };
+let prices = { BTCUSDT:83241, ETHUSDT:1842, SOLUSDT:131.4, BNBUSDT:598, XRPUSDT:2.31, ADAUSDT:0.6812, AVAXUSDT:19.87, DOTUSDT:4.12, USDTUSDT:1 };
 // Seed balances so initial portfolio = $32,496.57
 // 0.12 BTC * 67420 = 8090.40 | 2.1 ETH * 3520 = 7392.00 | 85 SOL * 147 = 12495.00 | 3.5 BNB * 612 = 2142.00 | USDT 2377.17 => total = 32496.57
 let changes = {};
@@ -1190,9 +1376,9 @@ let currentTF = '60';
 let portfolio = {
   balances: { BTC:0.12, ETH:2.1, SOL:85.0, BNB:3.5, USDT:2377.17 },
   positions: [
-    { id:1, sym:'BTCUSDT', side:'long',  qty:0.04,  entry:65800.00 },
-    { id:2, sym:'ETHUSDT', side:'long',  qty:0.5,   entry:3480.00 },
-    { id:3, sym:'SOLUSDT', side:'long',  qty:20.0,  entry:141.50 },
+    { id:1, sym:'BTCUSDT', side:'long',  qty:0.04,  entry:81200.00 },
+    { id:2, sym:'ETHUSDT', side:'long',  qty:0.5,   entry:1798.00 },
+    { id:3, sym:'SOLUSDT', side:'long',  qty:20.0,  entry:128.40 },
   ],
   history: [
     { date:'2026-03-08 14:10', pair:'ETHUSDT', side:'buy',  price:3480.00, qty:0.5,   fee:1.74,  status:'Filled' },
@@ -1369,20 +1555,70 @@ function renderOrderBook(bids, asks) {
   }).join('');
 }
 
-const SEED_PRICES = { BTCUSDT:67420, ETHUSDT:3520, SOLUSDT:147, BNBUSDT:612, XRPUSDT:0.54, ADAUSDT:0.47, AVAXUSDT:38.5, DOTUSDT:8.20 };
-function renderFakeOB() {
+const SEED_PRICES = { BTCUSDT:83241, ETHUSDT:1842, SOLUSDT:131.4, BNBUSDT:598, XRPUSDT:2.31, ADAUSDT:0.6812, AVAXUSDT:19.87, DOTUSDT:4.12 };
+
+// Persistent OB state for smooth flowing animation
+let obState = { bids:[], asks:[] };
+
+function initOBState() {
   const mid = prices[activePair] || SEED_PRICES[activePair] || 100;
   const isSmall = mid < 1;
-  const bids = [], asks = [];
-  for(let i=0;i<12;i++){
-    const spreadFactor = isSmall ? 0.0003 : 0.00008;
-    const spread = mid * spreadFactor * (i + 1);
-    // Realistic qty: larger for cheap coins
-    const baseQty = isSmall ? (Math.random()*8000+500) : (mid > 10000 ? (Math.random()*0.8+0.05) : (Math.random()*20+1));
-    const qty = baseQty.toFixed(isSmall ? 0 : (mid > 100 ? 3 : 4));
-    asks.push([String((mid + spread).toFixed(isSmall?5:2)), qty]);
-    bids.push([String((mid - spread).toFixed(isSmall?5:2)), qty]);
+  const isMid = mid > 1 && mid < 10;
+  const dp = isSmall ? 5 : (mid > 1000 ? 1 : 2);
+  const levels = 12;
+  obState.bids = [];
+  obState.asks = [];
+  for(let i=0;i<levels;i++){
+    const tickSize = isSmall ? 0.00001 : (mid > 50000 ? 0.5 : mid > 1000 ? 0.1 : mid > 10 ? 0.01 : 0.001);
+    const askP = mid + tickSize * (i+1) * (1 + Math.random()*0.4);
+    const bidP = mid - tickSize * (i+1) * (1 + Math.random()*0.4);
+    const qty = genOBQty(mid);
+    obState.asks.push({ p: parseFloat(askP.toFixed(dp)), q: qty });
+    obState.bids.push({ p: parseFloat(bidP.toFixed(dp)), q: qty });
   }
+}
+
+function genOBQty(mid) {
+  // Realistic qty distribution based on price tier
+  if(mid > 50000) return +(Math.random() * 0.9 + 0.02).toFixed(3);
+  if(mid > 1000)  return +(Math.random() * 6  + 0.1 ).toFixed(3);
+  if(mid > 100)   return +(Math.random() * 50 + 1   ).toFixed(2);
+  if(mid > 1)     return +(Math.random() * 400 + 10  ).toFixed(1);
+  return            +(Math.random() * 15000 + 500).toFixed(0);
+}
+
+function tickOBState() {
+  const mid = prices[activePair] || SEED_PRICES[activePair] || 100;
+  const isSmall = mid < 1;
+  const dp = isSmall ? 5 : (mid > 1000 ? 1 : 2);
+
+  // Walk prices slightly toward current mid
+  const tickSize = isSmall ? 0.000005 : (mid > 50000 ? 0.1 : mid > 1000 ? 0.05 : mid > 10 ? 0.005 : 0.0005);
+
+  obState.asks.forEach((l, i) => {
+    l.p = parseFloat((mid + tickSize * (i+1) * (0.9 + Math.random()*0.2)).toFixed(dp));
+    // Random qty mutation: 30% chance to change by up to 25%
+    if(Math.random() < 0.30) l.q = parseFloat((l.q * (0.75 + Math.random()*0.5)).toFixed(dp<2?0:3));
+    if(l.q < 0.001) l.q = genOBQty(mid);
+  });
+  obState.bids.forEach((l, i) => {
+    l.p = parseFloat((mid - tickSize * (i+1) * (0.9 + Math.random()*0.2)).toFixed(dp));
+    if(Math.random() < 0.30) l.q = parseFloat((l.q * (0.75 + Math.random()*0.5)).toFixed(dp<2?0:3));
+    if(l.q < 0.001) l.q = genOBQty(mid);
+  });
+  // Occasionally inject a large order (whale)
+  if(Math.random() < 0.04) {
+    const idx = Math.floor(Math.random()*3);
+    obState.asks[idx].q = genOBQty(mid) * (4 + Math.random()*6);
+    obState.bids[idx].q = genOBQty(mid) * (4 + Math.random()*6);
+  }
+}
+
+function renderFakeOB() {
+  if(obState.bids.length === 0) initOBState();
+  else tickOBState();
+  const bids = obState.bids.map(l => [String(l.p), String(l.q)]);
+  const asks = obState.asks.map(l => [String(l.p), String(l.q)]);
   renderOrderBook(bids, asks);
 }
 
@@ -1492,21 +1728,27 @@ function switchPair(pair) {
   // Depth: kill old sim, restart for new pair
   wsDepthAlive = false;
   if(simDepthInterval){ clearInterval(simDepthInterval); simDepthInterval=null; }
-  setTimeout(() => { renderFakeOB(); startSimDepth(); attemptDepthWS(); }, 80);
+  setTimeout(() => { obState = {bids:[],asks:[]}; renderFakeOB(); startSimDepth(); attemptDepthWS(); }, 80);
 }
 
 // ─── MARKET LIST ──────────────────────────────────────────────────────────
 function buildMarketList() {
   const list = document.getElementById('market-list');
-  list.innerHTML = PAIRS.map(p => {
+  let pairsToShow = PAIRS;
+  if(currentMarketTab === 'favs') pairsToShow = PAIRS.filter(p => favourites.has(p));
+
+  const makeRow = (p, isFutures) => {
     const coin = p.replace('USDT','');
     const price = prices[p] || 0;
     const dp = price < 1 ? 5 : 2;
-    return `<div class="mrow ${p===activePair?'active':''}" id="mrow-${p}" data-pair="${p}" onclick="switchPair('${p}')">
+    const lev = isFutures ? `<span class="futures-badge">PERP</span>` : '';
+    const starCls = favourites.has(p) ? 'starred' : '';
+    return `<div class="mrow ${p===activePair&&!isFutures?'active':''}" id="mrow-${p}" data-pair="${p}" onclick="switchPair('${p}')">
       <div class="mrow-left">
+        <div class="mrow-star ${starCls}" data-pair="${p}" onclick="toggleFav('${p}', event)">★</div>
         <div class="coin-icon" style="background:${COIN_COLORS[coin]}22; color:${COIN_COLORS[coin]};">${COIN_LABELS[coin]||coin[0]}</div>
         <div>
-          <div class="mrow-name">${coin}<span style="font-size:9px; color:var(--text2); margin-left:2px;">/USDT</span></div>
+          <div class="mrow-name">${coin}${lev}<span style="font-size:9px; color:var(--text2); margin-left:2px;">${isFutures?'/USDT PERP':'/USDT'}</span></div>
           <div class="mrow-vol" id="mvol-${p}">Loading...</div>
         </div>
       </div>
@@ -1515,7 +1757,19 @@ function buildMarketList() {
         <div class="mrow-chg" id="mchg-${p}" style="color:var(--text2)">—</div>
       </div>
     </div>`;
-  }).join('');
+  };
+
+  if(currentMarketTab === 'futures') {
+    list.innerHTML = PAIRS.map(p => makeRow(p, true)).join('');
+  } else if(currentMarketTab === 'favs') {
+    if(pairsToShow.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2);font-size:12px;">No favourites yet.<br>Click ★ on any pair to add it.</div>';
+    } else {
+      list.innerHTML = pairsToShow.map(p => makeRow(p, false)).join('');
+    }
+  } else {
+    list.innerHTML = PAIRS.map(p => makeRow(p, false)).join('');
+  }
 }
 
 function updateMarketRow(d) {
@@ -1900,32 +2154,40 @@ function switchView(view) {
   const tradeEls = ['market-panel','chart-panel','ob-panel','pos-panel','order-panel'];
   const isWallet  = view === 'wallet';
   const isProfile = view === 'profile';
+  const isConvert = view === 'convert';
   const isTrade   = view === 'trade';
+  const isOverlay = isWallet || isProfile || isConvert;
 
-  // Trade panels: hide when not on trade view
+  // Trade panels
   tradeEls.forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.style.display = (isWallet || isProfile) ? 'none' : '';
+    if(el) el.style.display = isOverlay ? 'none' : '';
   });
 
-  // Wallet section
+  // Wallet
   const walletEl = document.getElementById('view-wallet');
   walletEl.classList.toggle('show', isWallet);
   if(isWallet) renderWalletView();
 
-  // Profile section
+  // Profile
   const profileEl = document.getElementById('view-profile');
   profileEl.classList.toggle('show', isProfile);
   if(isProfile) refreshProfileStats();
 
-  // Topbar: hide on profile (it has its own)
+  // Convert
+  const convertEl = document.getElementById('view-convert');
+  if(convertEl) {
+    convertEl.style.display = isConvert ? '' : 'none';
+    if(isConvert) { updateConvUI(); renderConvHistory(); }
+  }
+
+  // Topbar: hide on profile (has its own bar)
   const topbar = document.getElementById('topbar');
   if(topbar) topbar.style.display = isProfile ? 'none' : '';
 
-  // Nav active states
+  // Nav states
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('btn-'+view)?.classList.add('active');
-  // Profile avatar highlight
   const avatar = document.getElementById('btn-profile');
   if(avatar) avatar.style.outline = isProfile ? '2px solid var(--accent)' : 'none';
 }
@@ -2283,20 +2545,20 @@ function revokeSession(btn, deviceName) {
 const DEFAULT_PORTFOLIO = {
   balances: { BTC:0.12, ETH:2.1, SOL:85.0, BNB:3.5, USDT:2377.17 },
   positions: [
-    { id:1, sym:'BTCUSDT', side:'long', qty:0.04,  entry:65800.00 },
-    { id:2, sym:'ETHUSDT', side:'long', qty:0.5,   entry:3480.00  },
-    { id:3, sym:'SOLUSDT', side:'long', qty:20.0,  entry:141.50   },
+    { id:1, sym:'BTCUSDT', side:'long', qty:0.04,  entry:81200.00 },
+    { id:2, sym:'ETHUSDT', side:'long', qty:0.5,   entry:1798.00  },
+    { id:3, sym:'SOLUSDT', side:'long', qty:20.0,  entry:128.40   },
   ],
   history: [
-    { date:'2026-03-08 14:10', pair:'ETHUSDT',  side:'buy',  price:3480.00,  qty:0.5,   fee:1.74,  status:'Filled' },
-    { date:'2026-03-08 11:20', pair:'SOLUSDT',  side:'buy',  price:141.50,   qty:20.00, fee:2.83,  status:'Filled' },
-    { date:'2026-03-08 08:45', pair:'BTCUSDT',  side:'buy',  price:65800.0,  qty:0.04,  fee:2.63,  status:'Filled' },
-    { date:'2026-03-07 21:30', pair:'SOLUSDT',  side:'sell', price:138.00,   qty:10.00, fee:1.38,  status:'Filled' },
-    { date:'2026-03-07 14:20', pair:'BNBUSDT',  side:'buy',  price:598.00,   qty:3.50,  fee:2.09,  status:'Filled' },
-    { date:'2026-03-06 19:12', pair:'BTCUSDT',  side:'buy',  price:64200.0,  qty:0.02,  fee:1.28,  status:'Filled' },
+    { date:'2026-03-08 14:10', pair:'ETHUSDT',  side:'buy',  price:1798.00,  qty:0.5,   fee:0.90,  status:'Filled' },
+    { date:'2026-03-08 11:20', pair:'SOLUSDT',  side:'buy',  price:128.40,   qty:20.00, fee:2.57,  status:'Filled' },
+    { date:'2026-03-08 08:45', pair:'BTCUSDT',  side:'buy',  price:81200.0,  qty:0.04,  fee:3.25,  status:'Filled' },
+    { date:'2026-03-07 21:30', pair:'SOLUSDT',  side:'sell', price:125.50,   qty:10.00, fee:1.26,  status:'Filled' },
+    { date:'2026-03-07 14:20', pair:'BNBUSDT',  side:'buy',  price:592.00,   qty:3.50,  fee:2.07,  status:'Filled' },
+    { date:'2026-03-06 19:12', pair:'BTCUSDT',  side:'buy',  price:79800.0,  qty:0.02,  fee:1.60,  status:'Filled' },
   ]
 };
-const DEFAULT_PRICES = { BTCUSDT:67420, ETHUSDT:3520, SOLUSDT:147, BNBUSDT:612, XRPUSDT:0.54, ADAUSDT:0.47, AVAXUSDT:38.5, DOTUSDT:8.20 };
+const DEFAULT_PRICES = { BTCUSDT:83241, ETHUSDT:1842, SOLUSDT:131.4, BNBUSDT:598, XRPUSDT:2.31, ADAUSDT:0.6812, AVAXUSDT:19.87, DOTUSDT:4.12 };
 
 // ─── SESSIONS MODAL ──────────────────────────────────────────────
 function openSessionsModal() {
@@ -2414,6 +2676,258 @@ function devClearData() {
   if(walletEl&&walletEl.classList.contains('show')) renderWalletView();
   closeDevMenu();
   showToast('info','Data Reset','Portfolio restored to default (~$32,496)');
+}
+
+
+// ─── MARKET TABS (Spot / Futures / Favourites) ────────────────────
+let currentMarketTab = 'spot';
+let favourites = new Set(['BTCUSDT','ETHUSDT','SOLUSDT']);
+
+function switchMarketTab(el, tab) {
+  document.querySelectorAll('.mt').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentMarketTab = tab;
+  buildMarketList();
+}
+
+function toggleFav(pair, e) {
+  e.stopPropagation();
+  if(favourites.has(pair)) favourites.delete(pair);
+  else favourites.add(pair);
+  // Update all star icons
+  document.querySelectorAll('.mrow-star[data-pair="'+pair+'"]').forEach(s => {
+    s.classList.toggle('starred', favourites.has(pair));
+  });
+  if(currentMarketTab === 'favs') buildMarketList();
+}
+
+// ─── CONVERT / TRANSFER ───────────────────────────────────────────
+const CONV_COINS = [
+  { sym:'BTC', name:'Bitcoin',     label:'₿', color:'#f7931a' },
+  { sym:'ETH', name:'Ethereum',    label:'Ξ', color:'#627eea' },
+  { sym:'SOL', name:'Solana',      label:'◎', color:'#14f195' },
+  { sym:'BNB', name:'BNB',         label:'B', color:'#f3ba2f' },
+  { sym:'XRP', name:'XRP',         label:'✕', color:'#00aae4' },
+  { sym:'ADA', name:'Cardano',     label:'A', color:'#0033ad' },
+  { sym:'AVAX', name:'Avalanche',  label:'▲', color:'#e84142' },
+  { sym:'DOT', name:'Polkadot',    label:'●', color:'#e6007a' },
+  { sym:'USDT', name:'Tether',     label:'$', color:'#26a17b' },
+];
+
+let convFromCoin = 'BTC';
+let convToCoin   = 'ETH';
+let convPickerTarget = 'from';
+let convHistory = [];
+
+function getConvPrice(sym) {
+  if(sym === 'USDT') return 1;
+  return prices[sym+'USDT'] || SEED_PRICES[sym+'USDT'] || 1;
+}
+
+function updateConvUI() {
+  const from = CONV_COINS.find(c=>c.sym===convFromCoin);
+  const to   = CONV_COINS.find(c=>c.sym===convToCoin);
+  // From selector
+  document.getElementById('conv-from-icon').style.background = from.color+'22';
+  document.getElementById('conv-from-icon').style.color = from.color;
+  document.getElementById('conv-from-icon').textContent = from.label;
+  document.getElementById('conv-from-coin').textContent = from.sym;
+  document.getElementById('conv-from-name').textContent = from.name;
+  // To selector
+  document.getElementById('conv-to-icon').style.background = to.color+'22';
+  document.getElementById('conv-to-icon').style.color = to.color;
+  document.getElementById('conv-to-icon').textContent = to.label;
+  document.getElementById('conv-to-coin').textContent = to.sym;
+  document.getElementById('conv-to-name').textContent = to.name;
+  // Available balance
+  const fromBal = portfolio.balances[convFromCoin] || 0;
+  const toBal   = portfolio.balances[convToCoin]   || 0;
+  document.getElementById('conv-from-avail').textContent = fromBal.toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + from.sym;
+  document.getElementById('conv-to-balance').textContent = toBal.toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + to.sym;
+  // Rate label
+  const fromP = getConvPrice(convFromCoin);
+  const toP   = getConvPrice(convToCoin);
+  const rate  = fromP / toP;
+  document.getElementById('conv-rate-label').textContent = `1 ${from.sym} = ${rate.toFixed(6).replace(/\.?0+$/,'')} ${to.sym}`;
+  document.getElementById('conv-summary-rate').textContent = `1 ${from.sym} = ${toCurrency(fromP)}`;
+  convCalcOutput();
+}
+
+function convCalcOutput() {
+  const amtIn = parseFloat(document.getElementById('conv-amount-in').value) || 0;
+  const fromP = getConvPrice(convFromCoin);
+  const toP   = getConvPrice(convToCoin);
+  const usdVal = amtIn * fromP;
+  const amtOut = usdVal / toP;
+  const afterFee = amtOut * 0.999;
+
+  if(amtIn > 0) {
+    document.getElementById('conv-amount-out').value = afterFee.toFixed(6).replace(/\.?0+$/,'');
+    document.getElementById('conv-in-fiat').textContent  = '≈ ' + toCurrency(usdVal);
+    document.getElementById('conv-out-fiat').textContent = '≈ ' + toCurrency(amtOut * toP * 0.999);
+    document.getElementById('conv-receive-val').textContent = afterFee.toFixed(8).replace(/0+$/,'0') + ' ' + convToCoin;
+    document.getElementById('conv-btn').textContent = `Preview Convert ${amtIn} ${convFromCoin} → ${afterFee.toFixed(6)} ${convToCoin}`;
+  } else {
+    document.getElementById('conv-amount-out').value = '';
+    document.getElementById('conv-in-fiat').textContent = '≈ —';
+    document.getElementById('conv-out-fiat').textContent = '≈ —';
+    document.getElementById('conv-receive-val').textContent = '—';
+    document.getElementById('conv-btn').textContent = 'Preview Convert';
+  }
+}
+
+function setConvPct(pct) {
+  const bal = portfolio.balances[convFromCoin] || 0;
+  document.getElementById('conv-amount-in').value = (bal * pct/100).toFixed(8).replace(/\.?0+$/,'');
+  convCalcOutput();
+}
+
+function swapConvCoins() {
+  [convFromCoin, convToCoin] = [convToCoin, convFromCoin];
+  document.getElementById('conv-amount-in').value = '';
+  updateConvUI();
+}
+
+function openConvCoinPicker(target) {
+  convPickerTarget = target;
+  renderConvCoinList('');
+  document.getElementById('conv-coin-search').value = '';
+  document.getElementById('conv-coin-picker-overlay').style.display = 'flex';
+}
+
+function closeConvCoinPicker() {
+  document.getElementById('conv-coin-picker-overlay').style.display = 'none';
+}
+
+function filterConvCoins(q) { renderConvCoinList(q); }
+
+function renderConvCoinList(q) {
+  const other = convPickerTarget === 'from' ? convToCoin : convFromCoin;
+  const list = document.getElementById('conv-coin-list');
+  const filtered = CONV_COINS.filter(c => !q || c.sym.toLowerCase().includes(q.toLowerCase()) || c.name.toLowerCase().includes(q.toLowerCase()));
+  list.innerHTML = filtered.map(c => {
+    const bal = (portfolio.balances[c.sym]||0).toLocaleString(undefined,{maximumFractionDigits:6});
+    const isOther = c.sym === other;
+    return `<div class="conv-coin-option${isOther?' disabled':''}" onclick="selectConvCoin('${c.sym}')">
+      <div style="width:28px;height:28px;border-radius:50%;background:${c.color}22;color:${c.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${c.label}</div>
+      <span class="conv-coin-sym">${c.sym}</span>
+      <span class="conv-coin-name">${c.name}</span>
+      <span class="conv-coin-bal">${bal}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectConvCoin(sym) {
+  if(convPickerTarget === 'from') convFromCoin = sym;
+  else convToCoin = sym;
+  closeConvCoinPicker();
+  document.getElementById('conv-amount-in').value = '';
+  updateConvUI();
+}
+
+function executeConvert() {
+  const amtInStr = document.getElementById('conv-amount-in').value;
+  const amtIn = parseFloat(amtInStr);
+  if(!amtIn || amtIn <= 0) { showToast('info','Convert','Enter an amount to convert'); return; }
+  const bal = portfolio.balances[convFromCoin] || 0;
+  if(amtIn > bal) { showToast('sell','Insufficient Balance',`You have ${bal.toLocaleString()} ${convFromCoin}`); return; }
+
+  const fromP = getConvPrice(convFromCoin);
+  const toP   = getConvPrice(convToCoin);
+  const amtOut = (amtIn * fromP / toP) * 0.999;
+
+  // Execute: deduct from, add to
+  portfolio.balances[convFromCoin] = (portfolio.balances[convFromCoin]||0) - amtIn;
+  portfolio.balances[convToCoin]   = (portfolio.balances[convToCoin]||0) + amtOut;
+  if(portfolio.balances[convFromCoin] < 0) portfolio.balances[convFromCoin] = 0;
+
+  // Log to conversion history
+  const now = new Date().toLocaleString('en-GB',{hour12:false}).replace(',','');
+  convHistory.unshift({ time:now, from:convFromCoin, to:convToCoin, amtIn, amtOut, usdVal: amtIn*fromP });
+  // Also push to trade history
+  portfolio.history.unshift({ date:now, pair:convFromCoin+'/'+convToCoin, side:'convert', price:fromP/toP, qty:amtIn, fee:amtIn*fromP*0.001, status:'Converted' });
+
+  renderConvHistory();
+  document.getElementById('conv-amount-in').value = '';
+  updateConvUI();
+  showToast('buy','Conversion Complete',`${amtIn.toLocaleString(undefined,{maximumFractionDigits:6})} ${convFromCoin} → ${amtOut.toFixed(6)} ${convToCoin}`);
+}
+
+function renderConvHistory() {
+  const el = document.getElementById('conv-history-list');
+  if(!el) return;
+  if(convHistory.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:16px 0;text-align:center;">No conversions yet</div>';
+    return;
+  }
+  el.innerHTML = convHistory.slice(0,8).map(h => {
+    const from = CONV_COINS.find(c=>c.sym===h.from);
+    const to   = CONV_COINS.find(c=>c.sym===h.to);
+    return `<div class="conv-hist-item">
+      <div style="display:flex;align-items:center;gap:6px;flex:1;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${from.color}22;color:${from.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${from.label}</div>
+        <svg width="10" height="10" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <div style="width:22px;height:22px;border-radius:50%;background:${to.color}22;color:${to.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${to.label}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;font-weight:500;">${h.amtIn.toLocaleString(undefined,{maximumFractionDigits:6})} ${h.from} → ${h.amtOut.toFixed(6)} ${h.to}</div>
+          <div style="font-size:10px;color:var(--text2);">${h.time} · ${toCurrency(h.usdVal)}</div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:var(--pos);font-weight:500;">Done</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── DEV MENU — wallet total field ────────────────────────────────
+// Override openDevMenu to add wallet total field
+const _origOpenDevMenu = openDevMenu;
+function openDevMenu() {
+  _origOpenDevMenu();
+  // Patch in a "Total Wallet Value" override field if not present
+  const existing = document.getElementById('dev-wallet-total-wrap');
+  if(!existing) {
+    const totalUSD = Object.entries(portfolio.balances).reduce((s,[c,a]) => s + a*(prices[c+'USDT']||(c==='USDT'?1:0)),0);
+    const btcPrice = prices['BTCUSDT'] || 83241;
+    const infoDiv = document.createElement('div');
+    infoDiv.id = 'dev-wallet-total-wrap';
+    infoDiv.innerHTML = `
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;">Wallet Total Override</div>
+      <div class="dev-wallet-total">
+        <div>
+          <div style="font-size:11px;color:var(--text2);">Current total value</div>
+          <div style="font-size:15px;font-weight:700;font-family:var(--mono);margin-top:2px;" id="dev-current-total">${toCurrency(totalUSD)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;color:var(--text2);">USDT</span>
+            <input id="dev-wallet-usdt-override" type="number" value="${portfolio.balances.USDT.toFixed(2)}" style="background:none;border:none;outline:none;color:var(--text0);font-family:var(--mono);font-size:12px;width:90px;" placeholder="USDT balance">
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:6px;">Directly set your USDT balance. Coin amounts are edited above.</div>`;
+    const scrollArea = document.querySelector('#devmenu-overlay [style*="overflow-y:auto"]');
+    if(scrollArea) scrollArea.insertBefore(infoDiv, scrollArea.firstChild);
+  } else {
+    // Update current total display
+    const totalUSD = Object.entries(portfolio.balances).reduce((s,[c,a]) => s + a*(prices[c+'USDT']||(c==='USDT'?1:0)),0);
+    const el = document.getElementById('dev-current-total');
+    if(el) el.textContent = toCurrency(totalUSD);
+  }
+}
+
+// Override devApply to pick up wallet override
+const _origDevApply = devApply;
+function devApply() {
+  const override = document.getElementById('dev-wallet-usdt-override');
+  if(override) {
+    const v = parseFloat(override.value);
+    if(!isNaN(v) && v >= 0) {
+      // Sync to the main USDT field too
+      const mainUsdt = document.getElementById('dev-bal-USDT');
+      if(mainUsdt) mainUsdt.value = v.toFixed(2);
+    }
+  }
+  _origDevApply();
 }
 
 function updateClock() {
