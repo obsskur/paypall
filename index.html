@@ -1567,9 +1567,9 @@ function startSimPrices() {
       updateMarketRowById(p);
       if(p === activePair){
         const price = prices[p];
-        const midEl=document.getElementById('ob-mid'); if(midEl) midEl.textContent=price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-        document.getElementById('stat-high').textContent = '$'+(price*1.012).toLocaleString(undefined,{minimumFractionDigits:2});
-        document.getElementById('stat-low').textContent = '$'+(price*0.988).toLocaleString(undefined,{minimumFractionDigits:2});
+        const midEl=document.getElementById('ob-mid'); if(midEl) midEl.textContent=toCoinPrice(price);
+        const shEl=document.getElementById('stat-high'); if(shEl) shEl.textContent=toCoinPrice(price*1.012);
+        const slEl=document.getElementById('stat-low');  if(slEl) slEl.textContent=toCoinPrice(price*0.988);
         const svol = document.getElementById('stat-vol');
         if(svol) svol.textContent = (Math.random()*2+1).toFixed(2)+'B';
         // stat-oi removed from HTML — guard against null
@@ -1615,22 +1615,22 @@ function renderOrderBook(bids, asks) {
 
   const topAsk = parseFloat(asks[0][0]);
   const topBid = parseFloat(bids[0][0]);
-  const spread = (topAsk - topBid).toFixed(2);
+  const spread = topAsk - topBid;
   const spreadPct = ((topAsk-topBid)/topAsk*100).toFixed(3);
-  document.getElementById('ob-spread-val').textContent = `Spread: ${spread} (${spreadPct}%)`;
+  document.getElementById('ob-spread-val').textContent = `Spread: ${toCoinPrice(spread)} (${spreadPct}%)`;
 
   const maxQty = Math.max(...asks.slice(0,10).map(a=>parseFloat(a[1])), ...bids.slice(0,10).map(b=>parseFloat(b[1])));
 
   askEl.innerHTML = asks.slice(0,10).map(a => {
     const p=parseFloat(a[0]), q=parseFloat(a[1]), t=p*q;
     const w=(q/maxQty*100).toFixed(1);
-    return `<div class="ob-row"><div class="ob-bg" style="width:${w}%; background:var(--neg)"></div><span class="p" style="color:var(--neg)">${p.toLocaleString(undefined,{minimumFractionDigits:2})}</span><span class="s">${q.toFixed(4)}</span><span class="t">${t.toFixed(2)}</span></div>`;
+    return `<div class="ob-row"><div class="ob-bg" style="width:${w}%; background:var(--neg)"></div><span class="p" style="color:var(--neg)">${toCoinPrice(p)}</span><span class="s">${q.toFixed(4)}</span><span class="t">${toCoinPrice(t)}</span></div>`;
   }).join('');
 
   bidEl.innerHTML = bids.slice(0,10).map(b => {
     const p=parseFloat(b[0]), q=parseFloat(b[1]), t=p*q;
     const w=(q/maxQty*100).toFixed(1);
-    return `<div class="ob-row"><div class="ob-bg" style="width:${w}%; background:var(--pos)"></div><span class="p" style="color:var(--pos)">${p.toLocaleString(undefined,{minimumFractionDigits:2})}</span><span class="s">${q.toFixed(4)}</span><span class="t">${t.toFixed(2)}</span></div>`;
+    return `<div class="ob-row"><div class="ob-bg" style="width:${w}%; background:var(--pos)"></div><span class="p" style="color:var(--pos)">${toCoinPrice(p)}</span><span class="s">${q.toFixed(4)}</span><span class="t">${toCoinPrice(t)}</span></div>`;
   }).join('');
 }
 
@@ -1755,22 +1755,23 @@ function applyTickerStats(d) {
   if(badge){ badge.style.background=color+'22'; badge.style.color=color; badge.textContent=COIN_LABELS[coin]||coin[0]; }
   document.getElementById('tb-pair-name').textContent = coin+'/USDT';
   const priceEl = document.getElementById('tb-pair-price');
-  if(priceEl){ priceEl.textContent='$'+price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?6:2}); priceEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  if(priceEl){ priceEl.textContent=toCoinPrice(price); priceEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
   const chgEl = document.getElementById('tb-pair-change');
-  if(chgEl){ chgEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'% ('+(chgAmt>=0?'+':'')+chgAmt.toFixed(2)+')'; chgEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
+  if(chgEl){ chgEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'% ('+(chgAmt>=0?'+':'')+toCoinPrice(Math.abs(chgAmt))+')'; chgEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
 
   const statChg = document.getElementById('stat-chg');
   if(statChg){ statChg.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; statChg.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
   const setEl = (id, val, color) => { const e=document.getElementById(id); if(e){e.textContent=val; if(color) e.style.color=color;} };
-  setEl('stat-high','$'+high.toLocaleString(undefined,{minimumFractionDigits:2}));
-  setEl('stat-low','$'+low.toLocaleString(undefined,{minimumFractionDigits:2}));
+  setEl('stat-high', toCoinPrice(high));
+  setEl('stat-low',  toCoinPrice(low));
   const volStr = vol>=1e9?(vol/1e9).toFixed(2)+'B':(vol>=1e6?(vol/1e6).toFixed(2)+'M':(vol>=1e3?(vol/1e3).toFixed(2)+'K':vol.toFixed(2)));
   setEl('stat-vol', volStr+' '+coin);
-  const qvolStr = qvol>=1e9?'$'+(qvol/1e9).toFixed(2)+'B':'$'+(qvol/1e6).toFixed(2)+'M';
+  const qvolUSD = qvol;
+  const qvolStr = qvolUSD>=1e9?toCurrencyShort(qvolUSD/1e9*1e9):toCurrencyShort(qvolUSD);
   setEl('stat-qvol', qvolStr);
   const tradesStr = trades>=1e6?(trades/1e6).toFixed(2)+'M':(trades>=1e3?(trades/1e3).toFixed(0)+'K':trades.toString());
   setEl('stat-trades', tradesStr);
-  setEl('ob-mid', price.toLocaleString(undefined,{minimumFractionDigits:2}), chgPct>=0?'var(--pos)':'var(--neg)');
+  setEl('ob-mid', toCoinPrice(price), chgPct>=0?'var(--pos)':'var(--neg)');
 
   // Update market list row too
   updateMarketRowFromRest(activePair, price, chgPct, qvol);
@@ -1780,7 +1781,7 @@ function updateMarketRowFromRest(pair, price, chgPct, qvol) {
   const pEl = document.getElementById('mprice-'+pair);
   const cEl = document.getElementById('mchg-'+pair);
   const vEl = document.getElementById('mvol-'+pair);
-  if(pEl) pEl.textContent = price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?6:2});
+  if(pEl) pEl.textContent = toCoinPrice(price);
   if(cEl){ cEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; cEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
   if(vEl) vEl.textContent='Vol '+(qvol>=1e9?(qvol/1e9).toFixed(2)+'B':(qvol/1e6).toFixed(2)+'M');
 }
@@ -1832,7 +1833,7 @@ function buildMarketList() {
         </div>
       </div>
       <div class="mrow-right">
-        <div class="mrow-price" id="mprice-${p}">${price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:dp})}</div>
+        <div class="mrow-price" id="mprice-${p}">${toCoinPrice(price)}</div>
         <div class="mrow-chg" id="mchg-${p}" style="color:var(--text2)">—</div>
       </div>
     </div>`;
@@ -1858,7 +1859,7 @@ function updateMarketRow(d) {
   const pEl = document.getElementById('mprice-'+d.s);
   const cEl = document.getElementById('mchg-'+d.s);
   const vEl = document.getElementById('mvol-'+d.s);
-  if(pEl) pEl.textContent = price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:price<1?5:2});
+  if(pEl) pEl.textContent = toCoinPrice(price);
   if(cEl){ cEl.textContent=(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'; cEl.style.color=chgPct>=0?'var(--pos)':'var(--neg)'; }
   if(vEl) vEl.textContent='Vol '+(qvol>=1e9?(qvol/1e9).toFixed(1)+'B':(qvol/1e6).toFixed(1)+'M');
 }
@@ -1868,7 +1869,7 @@ function updateMarketRowById(pair) {
   const chg = changes[pair]||0;
   const pEl = document.getElementById('mprice-'+pair);
   const cEl = document.getElementById('mchg-'+pair);
-  if(pEl) pEl.textContent = price.toLocaleString(undefined,{minimumFractionDigits:2});
+  if(pEl) pEl.textContent = toCoinPrice(price);
   if(cEl){ cEl.textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%'; cEl.style.color=chg>=0?'var(--pos)':'var(--neg)'; }
 }
 
@@ -2061,7 +2062,7 @@ function executeOrder() {
     const fee = cost * 0.001;
     portfolio.history.unshift({ date:timeStr, pair:activePair, side:orderSide, price:fillPrice, qty, fee, status:'Filled' });
     renderPositions();
-    showToast(orderSide, 'Market Order Filled', `${orderSide.toUpperCase()} ${qty} ${coin} @ $${fillPrice.toLocaleString(undefined,{minimumFractionDigits:2})}`);
+    showToast(orderSide, 'Market Order Filled', `${orderSide.toUpperCase()} ${qty} ${coin} @ ${toCoinPrice(fillPrice)}`);
 
   } else if(orderType === 'limit') {
     const price = parseFloat(document.getElementById('f-price').value);
@@ -2081,7 +2082,7 @@ function executeOrder() {
     if(fillsNow) {
       setTimeout(() => fillLimitOrder(order.id), 300 + Math.random()*700);
     }
-    showToast(orderSide, 'Limit Order Placed', `${orderSide.toUpperCase()} ${qty} ${coin} @ $${price.toLocaleString(undefined,{minimumFractionDigits:2})}`);
+    showToast(orderSide, 'Limit Order Placed', `${orderSide.toUpperCase()} ${qty} ${coin} @ ${toCoinPrice(price)}`);
     if(currentPosTab === 'open-orders') renderOpenOrdersTab();
     document.getElementById('open-count').textContent = (portfolio.pendingOrders||[]).length;
 
@@ -2237,7 +2238,7 @@ function buildTickerTape() {
   const inner = document.getElementById('ticker-inner');
   const buildItems = () => PAIRS.map(p => {
     const coin = p.replace('USDT',''); const chg = changes[p]||0; const price = prices[p]||0;
-    return `<span class="tick-item"><span style="color:var(--text0); font-weight:500">${coin}/USDT</span><span style="color:${chg>=0?'var(--pos)':'var(--neg)'}"> $${price.toLocaleString(undefined,{minimumFractionDigits:2})} ${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%</span><span class="tick-sep"> ·</span></span>`;
+    return `<span class="tick-item"><span style="color:var(--text0); font-weight:500">${coin}/USDT</span><span style="color:${chg>=0?'var(--pos)':'var(--neg)'}"> ${toCoinPrice(price)} ${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%</span><span class="tick-sep"> ·</span></span>`;
   }).join('');
   const content = buildItems()+buildItems();
   inner.innerHTML = content;
@@ -2591,9 +2592,29 @@ function selectCurrency(code) {
   if(el) el.textContent = activeCurrency.code + ' — ' + activeCurrency.name;
   document.getElementById('currency-picker-overlay').style.display='none';
   showToast('buy','Currency Updated', 'Displaying values in '+activeCurrency.name+' ('+activeCurrency.symbol+')');
+
+  // Re-render topbar + market sidebar with new currency
+  if(prices[activePair]) applyTickerStats({
+    symbol: activePair,
+    lastPrice: prices[activePair],
+    priceChangePercent: changes[activePair]||0,
+    priceChange: (prices[activePair]*(changes[activePair]||0)/100),
+    highPrice: prices[activePair]*1.012,
+    lowPrice: prices[activePair]*0.988,
+    volume: 0, quoteVolume: 0, count: 0
+  });
+  // Refresh all market row prices
+  PAIRS.forEach(p => { if(prices[p]) updateMarketRowFromRest(p, prices[p], changes[p]||0, 0); });
+  // Refresh order book prices
+  renderFakeOB();
+  // Rebuild ticker tape
+  buildTickerTape();
   // Rebuild wallet view with new currency if it's visible
   const walletEl = document.getElementById('view-wallet');
   if(walletEl && walletEl.classList.contains('show')) renderWalletView();
+  // Refresh convert view if open
+  const convEl = document.getElementById('view-convert');
+  if(convEl && convEl.style.display !== 'none') updateConvUI();
 }
 
 // Convert USD amount to active display currency
@@ -2604,6 +2625,22 @@ function toCurrency(usdAmount, decimals) {
   const dp = decimals !== undefined ? decimals : 2;
   return sym + v.toLocaleString(undefined,{minimumFractionDigits:dp,maximumFractionDigits:dp});
 }
+// Format a coin price in active currency with correct decimals
+function toCoinPrice(usdPrice) {
+  const v = usdPrice * activeCurrency.rate;
+  const sym = activeCurrency.symbol;
+  if(activeCurrency.code === 'JPY') {
+    if(v >= 1000) return sym + Math.round(v).toLocaleString();
+    return sym + v.toFixed(1);
+  }
+  // Preserve meaningful decimals for small coins
+  if(v < 0.01)  return sym + v.toFixed(6);
+  if(v < 1)     return sym + v.toFixed(4);
+  if(v < 10)    return sym + v.toFixed(3);
+  if(v < 100)   return sym + v.toFixed(2);
+  return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
 // Short format: 1.23K / 1.23M etc
 function toCurrencyShort(usdAmount) {
   const v = usdAmount * activeCurrency.rate;
