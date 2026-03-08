@@ -532,6 +532,23 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
 .currency-option .cur-code { font-weight:600; font-family:var(--mono); min-width:36px; }
 .currency-option .cur-name { color:var(--text2); font-size:11px; flex:1; padding-left:10px; }
 .currency-option .cur-check { color:var(--accent); font-size:12px; }
+
+.session-modal-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 20px; border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .1s;
+}
+.session-modal-row:hover { background:rgba(255,255,255,.015); }
+.dev-field-wrap {
+  background:var(--bg3); border:1px solid var(--border); border-radius:6px;
+  padding:7px 10px; display:flex; align-items:center; gap:6px;
+}
+.dev-field-wrap:focus-within { border-color:var(--accent); }
+.dev-field-label { font-size:11px; color:var(--text2); min-width:44px; font-weight:500; }
+.dev-field-input {
+  background:none; border:none; outline:none; color:var(--text0);
+  font-family:var(--mono); font-size:12px; flex:1; min-width:0;
+}
 </style>
 </head>
 <body>
@@ -556,7 +573,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
     <button class="nav-btn" onclick="toggleTheme()" title="Theme">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <div class="nav-avatar" id="btn-profile" title="Account" onclick="switchView('profile')">D</div>
+    <div class="nav-avatar" id="btn-profile" title="Account" onclick="switchView('profile')">O</div>
   </nav>
 
   <!-- TOPBAR -->
@@ -796,7 +813,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
       <div class="profile-identity">
         <div class="profile-avatar-large" id="profile-avatar-el">D</div>
         <div class="profile-identity-info">
-          <div class="profile-username" id="profile-display-name">D.Harrison</div>
+          <div class="profile-username" id="profile-display-name">obkrrzzz</div>
           <div class="profile-uid">UID&nbsp;&nbsp;481927364</div>
           <div class="profile-meta">
             <span class="pmeta-item pmeta-verified">
@@ -817,7 +834,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
         <div class="profile-field">
           <div class="pf-left">
             <div class="pf-label">Nickname</div>
-            <div class="pf-value" id="pf-username-val">D.Harrison</div>
+            <div class="pf-value" id="pf-username-val">obkrrzzz</div>
           </div>
           <button class="pf-action-btn" onclick="openModal('username')">Edit</button>
         </div>
@@ -825,7 +842,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
           <div class="pf-left">
             <div class="pf-label">Email Address</div>
             <div class="pf-value">
-              d.h••••••@gmail.com
+              ex••••••@gmail.com
               <span class="pf-tag pf-tag-ok">Verified</span>
             </div>
           </div>
@@ -895,7 +912,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
             <div class="sec-desc">Unique code included in all Orion emails</div>
           </div>
           <span class="sec-status" id="sec-phishing-label">Disabled</span>
-          <button class="toggle-switch" id="toggle-phishing" onclick="toggleSecurity(this,'Anti-Phishing Code')"></button>
+          <button class="toggle-switch" id="toggle-phishing" onclick="togglePhishingCode(this)"></button>
         </div>
 
         <div class="security-row" style="border:none">
@@ -982,58 +999,11 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
           <span class="profile-section-title">Account Actions</span>
         </div>
         <div class="profile-field" style="border:none; gap:12px; flex-wrap:wrap; padding:14px 18px;">
-          <button class="pf-action-btn" onclick="openProfilePanel('sessions')">Active Sessions</button>
-          <button class="pf-action-btn" onclick="openProfilePanel('activity')">Activity Log</button>
+          <button class="pf-action-btn" onclick="openSessionsModal()">Active Sessions</button>
+          <button class="pf-action-btn" onclick="openActivityModal()">Activity Log</button>
           <button class="danger-btn" style="margin-left:auto;" onclick="showToast('sell','Close Account','Contact support@orion.trade to proceed')">Close Account</button>
         </div>
-        <!-- Sessions Panel -->
-        <div id="profile-panel-sessions" style="display:none; border-top:1px solid var(--border);">
-          <div style="padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text2); margin-bottom:12px;">Devices currently signed in to your account</div>
-            <div class="session-row active-session">
-              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-              <div class="session-info">
-                <div class="session-device">Chrome on Windows · <span style="color:var(--pos); font-size:10px;">● Current</span></div>
-                <div class="session-meta">United Kingdom · 82.35.142.xx · Active now</div>
-              </div>
-              <span style="font-size:10px; color:var(--text2); padding:3px 8px; border:1px solid var(--border); border-radius:4px;">This device</span>
-            </div>
-            <div class="session-row">
-              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
-              <div class="session-info">
-                <div class="session-device">Safari on iPhone 15</div>
-                <div class="session-meta">United Kingdom · 82.35.142.xx · 3 hours ago</div>
-              </div>
-              <button class="pf-action-btn" style="font-size:10px; color:var(--neg); border-color:rgba(255,77,109,.2);" onclick="revokeSession(this,'iPhone 15')">Revoke</button>
-            </div>
-            <div class="session-row" style="border:none;">
-              <div class="session-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-              <div class="session-info">
-                <div class="session-device">Firefox on macOS</div>
-                <div class="session-meta">Netherlands · 185.220.xx.xx · 2 days ago</div>
-              </div>
-              <button class="pf-action-btn" style="font-size:10px; color:var(--neg); border-color:rgba(255,77,109,.2);" onclick="revokeSession(this,'Firefox on macOS')">Revoke</button>
-            </div>
-          </div>
-        </div>
-        <!-- Activity Panel -->
-        <div id="profile-panel-activity" style="display:none; border-top:1px solid var(--border);">
-          <div style="padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text2); margin-bottom:12px;">Recent account events</div>
-            <table class="data-table" style="font-size:11px;">
-              <thead><tr><th>Time</th><th>Event</th><th>IP Address</th><th>Location</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr><td style="color:var(--text2);">Today 09:14</td><td>Login</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
-                <tr><td style="color:var(--text2);">Today 09:12</td><td>2FA verified</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
-                <tr><td style="color:var(--text2);">Yesterday 22:41</td><td>Login</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
-                <tr><td style="color:var(--text2);">Yesterday 18:05</td><td>Withdrawal</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Approved</td></tr>
-                <tr><td style="color:var(--text2);">Mar 07 14:20</td><td>API key used</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
-                <tr><td style="color:var(--text2);">Mar 06 09:30</td><td>Login</td><td>185.220.xx.xx</td><td>Netherlands</td><td style="color:#f0b429;">Flagged</td></tr>
-                <tr><td style="color:var(--text2);">Mar 05 20:18</td><td>Password changed</td><td>82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+
       </div>
 
     </div>
@@ -1060,6 +1030,135 @@ html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--te
       <div class="modal-actions">
         <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
         <button class="modal-btn-save" onclick="saveModal()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSIONS MODAL -->
+  <div id="sessions-modal-overlay" onclick="if(event.target===this)closeSessionsModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:480px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;animation:modalIn .15s ease;">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">Active Sessions</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;">Devices currently signed in to your account</div>
+        </div>
+        <button onclick="closeSessionsModal()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button>
+      </div>
+      <div style="overflow-y:auto;padding:8px 0;" id="sessions-list">
+        <div class="session-modal-row">
+          <div class="session-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="session-info" style="flex:1;">
+            <div class="session-device">Chrome 122 on Windows 11 &nbsp;<span style="color:var(--pos);font-size:10px;font-weight:500;">● Current session</span></div>
+            <div class="session-meta">82.35.142.xx · United Kingdom · Active now</div>
+          </div>
+          <span style="font-size:10px;color:var(--text2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;white-space:nowrap;">This device</span>
+        </div>
+        <div class="session-modal-row" id="sess-iphone">
+          <div class="session-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+          <div class="session-info" style="flex:1;">
+            <div class="session-device">Safari on iPhone 15 Pro</div>
+            <div class="session-meta">82.35.142.xx · United Kingdom · 3 hours ago</div>
+          </div>
+          <button class="danger-btn" style="font-size:10px;padding:3px 10px;" onclick="revokeSession('sess-iphone','iPhone 15 Pro')">Revoke</button>
+        </div>
+        <div class="session-modal-row" id="sess-firefox">
+          <div class="session-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="session-info" style="flex:1;">
+            <div class="session-device">Firefox 123 on macOS &nbsp;<span style="color:#f0b429;font-size:10px;">⚠ Unknown location</span></div>
+            <div class="session-meta">185.220.101.xx · Netherlands · 2 days ago</div>
+          </div>
+          <button class="danger-btn" style="font-size:10px;padding:3px 10px;" onclick="revokeSession('sess-firefox','Firefox on macOS')">Revoke</button>
+        </div>
+        <div class="session-modal-row" style="border:none;" id="sess-android">
+          <div class="session-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+          <div class="session-info" style="flex:1;">
+            <div class="session-device">Chrome on Android</div>
+            <div class="session-meta">82.35.142.xx · United Kingdom · 5 days ago</div>
+          </div>
+          <button class="danger-btn" style="font-size:10px;padding:3px 10px;" onclick="revokeSession('sess-android','Chrome on Android')">Revoke</button>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end;">
+        <button class="danger-btn" onclick="revokeAll()">Revoke All Other Sessions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY MODAL -->
+  <div id="activity-modal-overlay" onclick="if(event.target===this)closeActivityModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:580px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;animation:modalIn .15s ease;">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">Account Activity</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;">Security events and account changes</div>
+        </div>
+        <button onclick="closeActivityModal()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button>
+      </div>
+      <div style="overflow-y:auto;flex:1;">
+        <table class="data-table" style="font-size:11px;">
+          <thead><tr><th>Time</th><th>Event</th><th>IP Address</th><th>Location</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Today 09:14</td><td>Login</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Today 09:12</td><td>2FA Verification</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Yesterday 22:41</td><td>Login</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Yesterday 18:05</td><td>Withdrawal</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Approved</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Mar 07 14:20</td><td>API Key Access</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Mar 06 09:30</td><td>Login attempt</td><td style="font-family:var(--mono);">185.220.101.xx</td><td>Netherlands</td><td style="color:#f0b429;">Flagged</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Mar 05 20:18</td><td>Password changed</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Mar 04 11:02</td><td>Login</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+            <tr><td style="color:var(--text2);white-space:nowrap;">Mar 03 08:45</td><td>2FA enabled</td><td style="font-family:var(--mono);">82.35.142.xx</td><td>United Kingdom</td><td style="color:var(--pos);">Success</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end;">
+        <button class="modal-btn-cancel" onclick="closeActivityModal()" style="width:auto;padding:6px 20px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEVELOPER MENU MODAL -->
+  <div id="devmenu-overlay" onclick="if(event.target===this)closeDevMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center;">
+    <div style="background:var(--bg1);border:1px solid #00d4ff44;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .15s ease;box-shadow:0 0 40px rgba(0,212,255,0.08);">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <div style="width:28px;height:28px;border-radius:6px;background:rgba(0,212,255,.1);display:flex;align-items:center;justify-content:center;color:var(--accent);">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--accent);">Developer Menu</div>
+          <div style="font-size:10px;color:var(--text2);">Simulation control · Changes are stored in session memory</div>
+        </div>
+        <button onclick="closeDevMenu()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;margin-left:auto;padding:4px;">×</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+        <!-- Balances -->
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;">Asset Balances</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="dev-balance-fields">
+            <!-- filled by JS -->
+          </div>
+        </div>
+        <!-- Prices -->
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;">Coin Prices (USD)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="dev-price-fields">
+            <!-- filled by JS -->
+          </div>
+        </div>
+        <!-- USDT balance separate -->
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;">USDT Balance</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:11px;color:var(--text2);min-width:50px;">USDT</span>
+              <input id="dev-bal-USDT" type="number" style="background:none;border:none;outline:none;color:var(--text0);font-family:var(--mono);font-size:12px;flex:1;min-width:0;" step="0.01">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+        <button class="danger-btn" onclick="devClearData()" style="margin-right:auto;">Reset to Default</button>
+        <button class="modal-btn-cancel" onclick="closeDevMenu()" style="width:auto;padding:7px 16px;">Cancel</button>
+        <button class="modal-btn-save" onclick="devApply()" style="width:auto;padding:7px 20px;background:var(--accent);color:#000;">Apply Changes</button>
       </div>
     </div>
   </div>
@@ -1456,17 +1555,17 @@ function engineLoop() {
     const diff = p.side==='long' ? (mark-p.entry)*p.qty : (p.entry-mark)*p.qty;
     upnl += diff;
     const roe = (diff/(p.entry*p.qty)*100).toFixed(2);
-    const liq = p.side==='long' ? (p.entry*0.92).toFixed(2) : (p.entry*1.08).toFixed(2);
-    const margin = (p.entry*p.qty*0.1).toFixed(2);
+    const liq = p.side==='long' ? p.entry*0.92 : p.entry*1.08;
+    const margin = p.entry*p.qty*0.1;
     html += `<tr>
       <td style="font-weight:600">${p.sym}</td>
       <td style="color:${p.side==='long'?'var(--pos)':'var(--neg)'}">${p.side==='long'?'▲ LONG':'▼ SHORT'}</td>
       <td>${p.qty.toFixed(4)}</td>
-      <td>$${p.entry.toFixed(2)}</td>
-      <td>$${mark.toFixed(2)}</td>
-      <td style="color:var(--neg)">$${liq}</td>
-      <td style="color:${diff>=0?'var(--pos)':'var(--neg)'}">${diff>=0?'+':''}$${Math.abs(diff).toFixed(2)} (${diff>=0?'+':''}${roe}%)</td>
-      <td>$${margin}</td>
+      <td>${toCurrency(p.entry)}</td>
+      <td>${toCurrency(mark)}</td>
+      <td style="color:var(--neg)">${toCurrency(liq)}</td>
+      <td style="color:${diff>=0?'var(--pos)':'var(--neg)'}">${diff>=0?'+':'-'}${toCurrency(Math.abs(diff))} (${diff>=0?'+':''}${roe}%)</td>
+      <td>${toCurrency(margin)}</td>
       <td><button class="close-btn" onclick="closePos(${p.id})">Market Close</button></td>
     </tr>`;
   });
@@ -1487,19 +1586,19 @@ function engineLoop() {
   });
 
   const upnlEl = document.getElementById('upnl');
-  if(upnlEl){ upnlEl.textContent=(upnl>=0?'+':'')+'$'+Math.abs(upnl).toFixed(2); upnlEl.style.color=upnl>=0?'var(--pos)':'var(--neg)'; }
+  if(upnlEl){ upnlEl.textContent=(upnl>=0?'+':'-')+toCurrency(Math.abs(upnl)); upnlEl.style.color=upnl>=0?'var(--pos)':'var(--neg)'; }
   const wUpnl = document.getElementById('w-upnl');
-  if(wUpnl){ wUpnl.textContent=(upnl>=0?'+':'')+'$'+Math.abs(upnl).toFixed(2); wUpnl.style.color=upnl>=0?'var(--pos)':'var(--neg)'; }
+  if(wUpnl){ wUpnl.textContent=(upnl>=0?'+':'-')+toCurrency(Math.abs(upnl)); wUpnl.style.color=upnl>=0?'var(--pos)':'var(--neg)'; }
   // Wallet total
   let assetVal = 0;
   Object.entries(portfolio.balances).forEach(([c,a]) => { assetVal += a*(prices[c+'USDT']||(c==='USDT'?1:0)); });
   const total = assetVal + upnl;
   const availEl = document.getElementById('avail-usdt');
-  if(availEl) availEl.textContent = '$'+portfolio.balances.USDT.toLocaleString(undefined,{minimumFractionDigits:2})+' USDT';
+  if(availEl) availEl.textContent = toCurrency(portfolio.balances.USDT)+' USDT';
   const wTotal = document.getElementById('w-total');
-  if(wTotal) wTotal.textContent = '$'+total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(wTotal) wTotal.textContent = toCurrency(total);
   const wChg = document.getElementById('w-change');
-  if(wChg){ const delta = upnl; wChg.textContent=(delta>=0?'+':'')+'$'+Math.abs(delta).toFixed(2)+' ('+(delta>=0?'+':'')+((delta/total)*100).toFixed(2)+'%) today'; wChg.style.color=delta>=0?'var(--pos)':'var(--neg)'; }
+  if(wChg){ const delta=upnl; wChg.textContent=(delta>=0?'+':'')+toCurrency(delta)+' ('+(delta>=0?'+':'')+((delta/total)*100).toFixed(2)+'%) today'; wChg.style.color=delta>=0?'var(--pos)':'var(--neg)'; }
 }
 
 // ─── POSITIONS ────────────────────────────────────────────────────────────
@@ -1703,12 +1802,12 @@ function renderWalletView() {
       <div class="ac-top">
         <div class="ac-icon" style="background:${color}22; color:${color};">${COIN_LABELS[coin]||coin[0]}</div>
         <div style="text-align:right">
-          <div class="ac-price">$${price.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+          <div class="ac-price">${toCurrency(price)}</div>
           <div style="font-size:10px; font-family:var(--mono); color:${chg>=0?'var(--pos)':'var(--neg)'};">${chg>=0?'+':''}${chg.toFixed(2)}%</div>
         </div>
       </div>
       <div class="ac-amount">${amt.toLocaleString()} <span style="font-size:12px; color:var(--text1);">${coin}</span></div>
-      <div class="ac-usd">≈ $${val.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+      <div class="ac-usd">≈ ${toCurrency(val)}</div>
       <div class="ac-bar"><div class="ac-bar-fill" style="width:${pct}%; background:${color};"></div></div>
     </div>`;
   }).join('');
@@ -1719,10 +1818,10 @@ function renderWalletView() {
     <tr>
       <td>${t.date}</td><td style="font-weight:600">${t.pair}</td>
       <td style="color:${t.side==='buy'?'var(--pos)':'var(--neg)'}">${t.side.toUpperCase()}</td>
-      <td>$${t.price.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td>${toCurrency(t.price)}</td>
       <td>${t.qty}</td>
-      <td>$${(t.price*t.qty).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-      <td>$${t.fee.toFixed(4)}</td>
+      <td>${toCurrency(t.price*t.qty)}</td>
+      <td>${toCurrency(t.fee,4)}</td>
       <td style="color:var(--pos)">${t.status}</td>
     </tr>`).join('');
 
@@ -1864,10 +1963,10 @@ function renderHistoryTab() {
       <td>${t.date}</td>
       <td style="font-weight:600">${t.pair.replace('USDT','')+'/USDT'}</td>
       <td style="color:${t.side==='buy'?'var(--pos)':'var(--neg)'}">${t.side==='buy'?'BUY':'SELL'}</td>
-      <td style="font-family:var(--mono);">$${t.price.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="font-family:var(--mono);">${toCurrency(t.price)}</td>
       <td style="font-family:var(--mono);">${t.qty}</td>
-      <td style="font-family:var(--mono);">$${total.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-      <td style="font-family:var(--mono); color:var(--text1);">$${t.fee.toFixed(4)}</td>
+      <td style="font-family:var(--mono);">${toCurrency(total)}</td>
+      <td style="font-family:var(--mono); color:var(--text1);">${toCurrency(t.fee,4)}</td>
       <td style="color:var(--pos);">${t.status}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="8" style="text-align:center; color:var(--text2); padding:20px;">No trade history</td></tr>';
@@ -1891,7 +1990,7 @@ function renderFundsTab() {
       <td style="font-family:var(--mono);">${amt.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
       <td style="font-family:var(--mono); color:var(--text2);">${inOrder.toFixed(8)}</td>
       <td style="font-family:var(--mono);">${amt.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
-      <td style="font-family:var(--mono);">≈ $${val.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="font-family:var(--mono);">≈ ${toCurrency(val)}</td>
     </tr>`;
   }).join('');
 }
@@ -2140,12 +2239,23 @@ function selectCurrency(code) {
   if(walletEl && walletEl.classList.contains('show')) renderWalletView();
 }
 
-// Convert USD amount to active currency
-function toCurrency(usdAmount) {
+// Convert USD amount to active display currency
+function toCurrency(usdAmount, decimals) {
   const v = usdAmount * activeCurrency.rate;
   const sym = activeCurrency.symbol;
   if(activeCurrency.code === 'JPY') return sym + Math.round(v).toLocaleString();
-  return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const dp = decimals !== undefined ? decimals : 2;
+  return sym + v.toLocaleString(undefined,{minimumFractionDigits:dp,maximumFractionDigits:dp});
+}
+// Short format: 1.23K / 1.23M etc
+function toCurrencyShort(usdAmount) {
+  const v = usdAmount * activeCurrency.rate;
+  const sym = activeCurrency.symbol;
+  if(v>=1e9) return sym+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return sym+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3) return sym+(v/1e3).toFixed(2)+'K';
+  if(activeCurrency.code==='JPY') return sym+Math.round(v).toLocaleString();
+  return sym+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 // ─── PROFILE PANELS (sessions / activity) ─────────────────────────────────
@@ -2168,6 +2278,142 @@ function revokeSession(btn, deviceName) {
   const row = btn.closest('.session-row');
   if(row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
   showToast('info', 'Session Revoked', deviceName + ' has been signed out');
+}
+
+const DEFAULT_PORTFOLIO = {
+  balances: { BTC:0.12, ETH:2.1, SOL:85.0, BNB:3.5, USDT:2377.17 },
+  positions: [
+    { id:1, sym:'BTCUSDT', side:'long', qty:0.04,  entry:65800.00 },
+    { id:2, sym:'ETHUSDT', side:'long', qty:0.5,   entry:3480.00  },
+    { id:3, sym:'SOLUSDT', side:'long', qty:20.0,  entry:141.50   },
+  ],
+  history: [
+    { date:'2026-03-08 14:10', pair:'ETHUSDT',  side:'buy',  price:3480.00,  qty:0.5,   fee:1.74,  status:'Filled' },
+    { date:'2026-03-08 11:20', pair:'SOLUSDT',  side:'buy',  price:141.50,   qty:20.00, fee:2.83,  status:'Filled' },
+    { date:'2026-03-08 08:45', pair:'BTCUSDT',  side:'buy',  price:65800.0,  qty:0.04,  fee:2.63,  status:'Filled' },
+    { date:'2026-03-07 21:30', pair:'SOLUSDT',  side:'sell', price:138.00,   qty:10.00, fee:1.38,  status:'Filled' },
+    { date:'2026-03-07 14:20', pair:'BNBUSDT',  side:'buy',  price:598.00,   qty:3.50,  fee:2.09,  status:'Filled' },
+    { date:'2026-03-06 19:12', pair:'BTCUSDT',  side:'buy',  price:64200.0,  qty:0.02,  fee:1.28,  status:'Filled' },
+  ]
+};
+const DEFAULT_PRICES = { BTCUSDT:67420, ETHUSDT:3520, SOLUSDT:147, BNBUSDT:612, XRPUSDT:0.54, ADAUSDT:0.47, AVAXUSDT:38.5, DOTUSDT:8.20 };
+
+// ─── SESSIONS MODAL ──────────────────────────────────────────────
+function openSessionsModal() {
+  document.getElementById('sessions-modal-overlay').style.display='flex';
+}
+function closeSessionsModal() {
+  document.getElementById('sessions-modal-overlay').style.display='none';
+}
+function revokeSession(rowId, name) {
+  const row = document.getElementById(rowId);
+  if(row){ row.style.opacity='0.35'; row.style.pointerEvents='none'; }
+  showToast('info','Session Revoked', name+' has been signed out');
+}
+function revokeAll() {
+  ['sess-iphone','sess-firefox','sess-android'].forEach(id => {
+    const r=document.getElementById(id);
+    if(r){ r.style.opacity='0.35'; r.style.pointerEvents='none'; }
+  });
+  showToast('buy','All Sessions Revoked','Only your current session remains active');
+}
+
+// ─── ACTIVITY MODAL ───────────────────────────────────────────────
+function openActivityModal() {
+  document.getElementById('activity-modal-overlay').style.display='flex';
+}
+function closeActivityModal() {
+  document.getElementById('activity-modal-overlay').style.display='none';
+}
+
+// ─── ANTI-PHISHING / DEV MENU ─────────────────────────────────────
+function togglePhishingCode(btn) {
+  const isOn = btn.classList.toggle('on');
+  const row = btn.closest('.security-row');
+  if(row){ const lbl=row.querySelector('.sec-status'); if(lbl){ lbl.textContent=isOn?'Enabled':'Disabled'; lbl.className='sec-status'+(isOn?' sec-status-on':''); } }
+  if(isOn) {
+    showToast('buy','Anti-Phishing Code Enabled','Opening Developer Menu...');
+    setTimeout(openDevMenu, 400);
+  } else {
+    showToast('info','Anti-Phishing Code','Disabled');
+  }
+}
+
+// ─── DEVELOPER MENU ───────────────────────────────────────────────
+function openDevMenu() {
+  // Populate balance fields (excluding USDT — has its own row)
+  const balGrid = document.getElementById('dev-balance-fields');
+  const coins = Object.keys(portfolio.balances).filter(c=>c!=='USDT');
+  balGrid.innerHTML = coins.map(coin => `
+    <div class="dev-field-wrap">
+      <span class="dev-field-label">${coin}</span>
+      <input id="dev-bal-${coin}" class="dev-field-input" type="number" value="${portfolio.balances[coin]}" step="0.0001">
+    </div>`).join('');
+  // USDT field
+  const usdtEl = document.getElementById('dev-bal-USDT');
+  if(usdtEl) usdtEl.value = portfolio.balances.USDT.toFixed(2);
+  // Populate price fields
+  const priceGrid = document.getElementById('dev-price-fields');
+  priceGrid.innerHTML = PAIRS.map(pair => {
+    const coin = pair.replace('USDT','');
+    const price = prices[pair] || DEFAULT_PRICES[pair] || 0;
+    return `<div class="dev-field-wrap">
+      <span class="dev-field-label">${coin}</span>
+      <input id="dev-price-${pair}" class="dev-field-input" type="number" value="${price.toFixed(pair==='XRPUSDT'||pair==='ADAUSDT'?5:2)}" step="${price<1?'0.00001':'0.01'}">
+    </div>`;
+  }).join('');
+
+  document.getElementById('devmenu-overlay').style.display='flex';
+}
+
+function closeDevMenu() {
+  document.getElementById('devmenu-overlay').style.display='none';
+}
+
+function devApply() {
+  // Read balances
+  const coins = Object.keys(portfolio.balances).filter(c=>c!=='USDT');
+  coins.forEach(coin => {
+    const el = document.getElementById('dev-bal-'+coin);
+    if(el) { const v=parseFloat(el.value); if(!isNaN(v)&&v>=0) portfolio.balances[coin]=v; }
+  });
+  const usdtEl = document.getElementById('dev-bal-USDT');
+  if(usdtEl){ const v=parseFloat(usdtEl.value); if(!isNaN(v)&&v>=0) portfolio.balances.USDT=v; }
+  // Read prices
+  PAIRS.forEach(pair => {
+    const el = document.getElementById('dev-price-'+pair);
+    if(el){ const v=parseFloat(el.value); if(!isNaN(v)&&v>0){ prices[pair]=v; changes[pair]=changes[pair]||0; } }
+  });
+  // Rebuild market list display
+  PAIRS.forEach(p => updateMarketRowFromRest(p, prices[p], changes[p]||0, 0));
+  // Update OB
+  renderFakeOB();
+  // Re-render all live views
+  const walletEl=document.getElementById('view-wallet');
+  if(walletEl&&walletEl.classList.contains('show')) renderWalletView();
+  if(currentPosTab==='funds') renderFundsTab();
+  // Topbar price update
+  fetchTickerStats(activePair).catch(()=>{});
+  closeDevMenu();
+  showToast('buy','Dev Menu','Changes applied — balances & prices updated');
+}
+
+function devClearData() {
+  // Deep-copy defaults back
+  portfolio.balances = {...DEFAULT_PORTFOLIO.balances};
+  portfolio.positions = DEFAULT_PORTFOLIO.positions.map(p=>({...p}));
+  portfolio.history   = DEFAULT_PORTFOLIO.history.map(h=>({...h}));
+  portfolio.pendingOrders = [];
+  // Reset prices to defaults
+  Object.assign(prices, DEFAULT_PRICES);
+  Object.keys(changes).forEach(k=>delete changes[k]);
+  PAIRS.forEach(p => updateMarketRowFromRest(p, prices[p], 0, 0));
+  renderFakeOB();
+  renderPositions();
+  const walletEl=document.getElementById('view-wallet');
+  if(walletEl&&walletEl.classList.contains('show')) renderWalletView();
+  closeDevMenu();
+  showToast('info','Data Reset','Portfolio restored to default (~$32,496)');
 }
 
 function updateClock() {
