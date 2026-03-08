@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Orion Wallet Desktop</title>
+<title>Orion Wallet</title>
 
 <style>
 
@@ -15,8 +15,6 @@ color:white;
 display:flex;
 height:100vh;
 }
-
-/* Sidebar */
 
 .sidebar{
 width:220px;
@@ -34,7 +32,7 @@ margin-bottom:30px;
 .menu{
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:10px;
 }
 
 .menu button{
@@ -45,7 +43,6 @@ text-align:left;
 padding:10px;
 border-radius:8px;
 cursor:pointer;
-font-size:14px;
 }
 
 .menu button:hover{
@@ -53,21 +50,17 @@ background:#1a1f30;
 color:white;
 }
 
-/* Main area */
-
 .main{
 flex:1;
 display:flex;
 flex-direction:column;
 }
 
-/* Top bar */
-
 .topbar{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:18px 28px;
+padding:20px 28px;
 border-bottom:1px solid #23283a;
 background:#10131d;
 }
@@ -77,54 +70,43 @@ font-size:28px;
 font-weight:700;
 }
 
-/* Content */
+.actions button{
+background:#20263a;
+border:none;
+color:white;
+padding:8px 14px;
+border-radius:8px;
+margin-left:10px;
+cursor:pointer;
+}
+
+.actions button:hover{
+background:#2b324c;
+}
 
 .content{
 padding:28px;
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:24px;
 }
-
-/* Chart */
-
-.chart-card{
-background:#151a27;
-border-radius:14px;
-padding:20px;
-}
-
-.chart{
-height:220px;
-}
-
-.chart svg{
-width:100%;
-height:100%;
-}
-
-/* Assets table */
 
 .assets{
 background:#151a27;
 border-radius:14px;
 padding:20px;
-grid-column:span 2;
 }
 
-.assets table{
+table{
 width:100%;
 border-collapse:collapse;
 }
 
-.assets th{
+th{
 text-align:left;
 font-size:13px;
 color:#9aa0b5;
 padding-bottom:12px;
 }
 
-.assets td{
+td{
 padding:14px 0;
 border-top:1px solid #23283a;
 }
@@ -135,7 +117,7 @@ align-items:center;
 gap:10px;
 }
 
-.coin-icon{
+.icon{
 width:30px;
 height:30px;
 border-radius:50%;
@@ -152,50 +134,30 @@ font-weight:bold;
 .positive{color:#2ecc71;}
 .negative{color:#e74c3c;}
 
-.action-bar{
-display:flex;
-gap:10px;
-}
-
-.action-bar button{
-background:#20263a;
-border:none;
-color:white;
-padding:8px 14px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.action-bar button:hover{
-background:#2b324c;
-}
-
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-
 <div class="logo">Orion Wallet</div>
 
 <div class="menu">
 <button>Wallet</button>
 <button>Portfolio</button>
-<button>Exchange</button>
+<button>Market</button>
 <button>Transactions</button>
 <button>Security</button>
 <button>Settings</button>
 </div>
-
 </div>
 
 <div class="main">
 
 <div class="topbar">
-<div class="balance">$18,452.39</div>
+<div class="balance" id="portfolio">$0</div>
 
-<div class="action-bar">
+<div class="actions">
 <button>Send</button>
 <button>Receive</button>
 <button>Swap</button>
@@ -203,37 +165,6 @@ background:#2b324c;
 </div>
 
 <div class="content">
-
-<div class="chart-card">
-
-<h3>Portfolio Performance</h3>
-
-<div class="chart">
-
-<svg viewBox="0 0 500 200" preserveAspectRatio="none">
-
-<polyline
-fill="none"
-stroke="#7c8cff"
-stroke-width="4"
-points="0,150 80,140 140,120 200,130 260,90 320,100 380,60 440,70 500,40"
-/>
-
-</svg>
-
-</div>
-
-</div>
-
-<div class="chart-card">
-
-<h3>Portfolio Allocation</h3>
-
-<p>BTC 70%</p>
-<p>ETH 22%</p>
-<p>SOL 8%</p>
-
-</div>
 
 <div class="assets">
 
@@ -251,35 +182,32 @@ points="0,150 80,140 140,120 200,130 260,90 320,100 380,60 440,70 500,40"
 
 <tr>
 <td class="coin">
-<div class="coin-icon btc">₿</div>
-Bitcoin
+<div class="icon btc">₿</div>Bitcoin
 </td>
-<td>0.214 BTC</td>
-<td>$60,500</td>
-<td>$12,940</td>
-<td class="positive">+2.4%</td>
+<td id="btcBal">0.214</td>
+<td id="btcPrice">-</td>
+<td id="btcValue">-</td>
+<td id="btcChange">-</td>
 </tr>
 
 <tr>
 <td class="coin">
-<div class="coin-icon eth">Ξ</div>
-Ethereum
+<div class="icon eth">Ξ</div>Ethereum
 </td>
-<td>2.41 ETH</td>
-<td>$1,710</td>
-<td>$4,120</td>
-<td class="positive">+1.2%</td>
+<td id="ethBal">2.41</td>
+<td id="ethPrice">-</td>
+<td id="ethValue">-</td>
+<td id="ethChange">-</td>
 </tr>
 
 <tr>
 <td class="coin">
-<div class="coin-icon sol">S</div>
-Solana
+<div class="icon sol">S</div>Solana
 </td>
-<td>18.5 SOL</td>
-<td>$75.2</td>
-<td>$1,392</td>
-<td class="positive">+5.7%</td>
+<td id="solBal">18.5</td>
+<td id="solPrice">-</td>
+<td id="solValue">-</td>
+<td id="solChange">-</td>
 </tr>
 
 </table>
@@ -289,6 +217,61 @@ Solana
 </div>
 
 </div>
+
+<script>
+
+async function loadPrices(){
+
+let url="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true";
+
+let res=await fetch(url);
+let data=await res.json();
+
+let btc=data.bitcoin.usd;
+let eth=data.ethereum.usd;
+let sol=data.solana.usd;
+
+let btcBal=0.214;
+let ethBal=2.41;
+let solBal=18.5;
+
+let btcVal=btcBal*btc;
+let ethVal=ethBal*eth;
+let solVal=solBal*sol;
+
+document.getElementById("btcPrice").innerText="$"+btc.toLocaleString();
+document.getElementById("ethPrice").innerText="$"+eth.toLocaleString();
+document.getElementById("solPrice").innerText="$"+sol.toLocaleString();
+
+document.getElementById("btcValue").innerText="$"+btcVal.toLocaleString();
+document.getElementById("ethValue").innerText="$"+ethVal.toLocaleString();
+document.getElementById("solValue").innerText="$"+solVal.toLocaleString();
+
+let btcChange=data.bitcoin.usd_24h_change.toFixed(2);
+let ethChange=data.ethereum.usd_24h_change.toFixed(2);
+let solChange=data.solana.usd_24h_change.toFixed(2);
+
+let btcEl=document.getElementById("btcChange");
+btcEl.innerText=btcChange+"%";
+btcEl.className=btcChange>0?"positive":"negative";
+
+let ethEl=document.getElementById("ethChange");
+ethEl.innerText=ethChange+"%";
+ethEl.className=ethChange>0?"positive":"negative";
+
+let solEl=document.getElementById("solChange");
+solEl.innerText=solChange+"%";
+solEl.className=solChange>0?"positive":"negative";
+
+let total=btcVal+ethVal+solVal;
+
+document.getElementById("portfolio").innerText="$"+total.toLocaleString();
+
+}
+
+loadPrices();
+
+</script>
 
 </body>
 </html>
